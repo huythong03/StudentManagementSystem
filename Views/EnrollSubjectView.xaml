@@ -1,0 +1,19 @@
+﻿<UserControl x:Class="StudentManagementSystem.Views.EnrollSubjectView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <TextBlock Text="Available Subjects" FontSize="16" Margin="0,0,0,10"/>
+        <DataGrid x:Name="SubjectsGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="100"/>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <Button Grid.Row="2" Content="Enroll" Width="100" Margin="0,10,0,0" Click="Enroll_Click" HorizontalAlignment="Right"/>
+    </Grid>
+</UserControl>

@@ -1,0 +1,22 @@
+﻿<UserControl x:Class="StudentManagementSystem.Views.RoleManagementView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+            <Button Content="Add Role" Margin="5" Click="AddRole_Click"/>
+            <Button Content="Edit Role" Margin="5" Click="EditRole_Click"/>
+            <Button Content="Delete Role" Margin="5" Click="DeleteRole_Click"/>
+        </StackPanel>
+        <DataGrid x:Name="RolesGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="100"/>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="200"/>
+                <DataGridCheckBoxColumn Header="Status" Binding="{Binding Status}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

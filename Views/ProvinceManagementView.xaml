@@ -1,0 +1,21 @@
+﻿<UserControl x:Class="StudentManagementSystem.Views.ProvinceManagementView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+            <Button Content="Add Province" Margin="5" Click="AddProvince_Click"/>
+            <Button Content="Edit Province" Margin="5" Click="EditProvince_Click"/>
+            <Button Content="Delete Province" Margin="5" Click="DeleteProvince_Click"/>
+        </StackPanel>
+        <DataGrid x:Name="ProvincesGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="100"/>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>
