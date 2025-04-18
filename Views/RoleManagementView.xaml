@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="#F5F7FA">
     <UserControl.Resources>
-        <!-- Action Button Style (Add, Edit) -->
+        <!-- Add Button Style -->
         <Style x:Key="ActionButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="#4A90E2"/>
             <Setter Property="Foreground" Value="White"/>
@@ -26,6 +26,40 @@
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter Property="Background" Value="#2C6499"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Edit Button Style -->
+        <Style x:Key="EditButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#F1C40F"/>
+            <Setter Property="Foreground" Value="#2C3E50"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#D4AC0D"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="5"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#D4AC0D"/>
+                                <Setter Property="BorderBrush" Value="#B7950B"/>
+                                <Setter Property="Cursor" Value="Hand"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#B7950B"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -92,7 +126,7 @@
                     <Button Content="Edit Role"
                             Width="120"
                             Margin="5,0"
-                            Style="{StaticResource ActionButtonStyle}"
+                            Style="{StaticResource EditButtonStyle}"
                             Click="EditRole_Click"/>
                     <Button Content="Delete Role"
                             Width="120"

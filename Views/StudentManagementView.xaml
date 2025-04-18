@@ -130,7 +130,7 @@
                             Width="120"
                             Margin="5"
                             Style="{StaticResource AddButtonStyle}"
-                            Click="AddStudent_Click"/>
+                            Click="AddStudent_Click"/>  
                     <Button Content="Edit Student"
                             Width="120"
                             Margin="5"
