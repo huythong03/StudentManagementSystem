@@ -5,7 +5,7 @@ namespace StudentManagementSystem.Views
 	public partial class UpdateAccountForm : Window
 	{
 		private readonly DataAccess dataAccess;
-		private readonly string username;
+		private string username;
 
 		public UpdateAccountForm(string username)
 		{
@@ -25,20 +25,26 @@ namespace StudentManagementSystem.Views
 
 			try
 			{
-				if (!string.IsNullOrWhiteSpace(txtNewUsername.Text))
+				var user = dataAccess.GetUsers().Find(u => u.Username == username);
+				if (user == null)
 				{
-					// Note: Updating username requires updating related records or ensuring no conflicts
-					// For simplicity, we assume username updates are allowed and handled in DataAccess
-					var user = dataAccess.GetUsers().Find(u => u.Username == username);
-					if (user != null)
-					{
-						user.Username = txtNewUsername.Text;
-						user.ModifiedAt = System.DateTime.Now;
-						dataAccess.UpdateUser(user);
-					}
+					MessageBox.Show("User not found.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+					return;
 				}
 
-				if (!string.IsNullOrWhiteSpace(txtNewPassword.Password))
+				bool usernameChanged = !string.IsNullOrWhiteSpace(txtNewUsername.Text) && txtNewUsername.Text != username;
+				bool passwordChanged = !string.IsNullOrWhiteSpace(txtNewPassword.Password);
+
+				if (usernameChanged)
+				{
+					user.Username = txtNewUsername.Text;
+					user.ModifiedAt = DateTime.Now;
+					dataAccess.UpdateUser(user);
+					username = txtNewUsername.Text;
+					txtCurrentUsername.Text = username;
+				}
+
+				if (passwordChanged)
 				{
 					dataAccess.UpdateUserPassword(username, txtNewPassword.Password);
 				}
@@ -48,7 +54,7 @@ namespace StudentManagementSystem.Views
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+				MessageBox.Show($"Failed to update account: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
 			}
 		}
 

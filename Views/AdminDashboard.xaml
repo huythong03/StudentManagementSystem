@@ -1,23 +1,137 @@
 ﻿<Window x:Class="StudentManagementSystem.Views.AdminDashboard"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Admin Dashboard" Height="600" Width="800" WindowStartupLocation="CenterScreen">
+        Title="Admin Dashboard - Student Management System"
+        Height="600"
+        Width="800"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F7FA">
+    <Window.Resources>
+        <!-- Sidebar Button Style -->
+        <Style x:Key="SidebarButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#4A90E2"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="10,5"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="5"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#357ABD"/>
+                                <Setter Property="Cursor" Value="Hand"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#2C6499"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Logout Button Style -->
+        <Style x:Key="LogoutButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#E74C3C"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="10,5"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="5"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#C0392B"/>
+                                <Setter Property="Cursor" Value="Hand"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#A93226"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <StackPanel Background="#F0F0F0">
-            <Button Content="Manage Students" Margin="10" Click="ManageStudents_Click"/>
-            <Button Content="Manage Users" Margin="10" Click="ManageUsers_Click"/>
-            <Button Content="Manage Roles" Margin="10" Click="ManageRoles_Click"/>
-            <Button Content="Manage User Roles" Margin="10" Click="ManageUserRoles_Click"/>
-            <Button Content="Manage Subjects" Margin="10" Click="ManageSubjects_Click"/>
-            <Button Content="Manage Provinces" Margin="10" Click="ManageProvinces_Click"/>
-            <Button Content="View Enrollments" Margin="10" Click="ViewEnrollments_Click"/>
-            <Button Content="Search Student Grades" Margin="10" Click="SearchGrades_Click"/>
-            <Button Content="Logout" Margin="10" Click="Logout_Click"/>
-        </StackPanel>
-        <ContentControl x:Name="MainContent" Grid.Column="1" Margin="10"/>
+
+        <!-- Sidebar -->
+        <Border Background="#2C3E50"
+                Margin="0,0,5,0"
+                CornerRadius="0,8,8,0">
+            <StackPanel>
+                <!-- Sidebar Header -->
+                <Border Background="#233140"
+                        Padding="10"
+                        Margin="0,0,0,10">
+                    <TextBlock Text="Admin Menu"
+                              Foreground="White"
+                              FontSize="16"
+                              FontWeight="SemiBold"
+                              HorizontalAlignment="Center"/>
+                </Border>
+
+                <!-- Buttons -->
+                <Button Content="Manage Students"
+                        Style="{StaticResource SidebarButtonStyle}"
+                        Click="ManageStudents_Click"/>
+                <Button Content="Manage Users"
+                        Style="{StaticResource SidebarButtonStyle}"
+                        Click="ManageUsers_Click"/>
+                <Button Content="Manage Roles"
+                        Style="{StaticResource SidebarButtonStyle}"
+                        Click="ManageRoles_Click"/>
+                <Button Content="Manage User Roles"
+                        Style="{StaticResource SidebarButtonStyle}"
+                        Click="ManageUserRoles_Click"/>
+                <Button Content="Manage Subjects"
+                        Style="{StaticResource SidebarButtonStyle}"
+                        Click="ManageSubjects_Click"/>
+                <Button Content="Manage Provinces"
+                        Style="{StaticResource SidebarButtonStyle}"
+                        Click="ManageProvinces_Click"/>
+                <Button Content="View Enrollments"
+                        Style="{StaticResource SidebarButtonStyle}"
+                        Click="ViewEnrollments_Click"/>
+                <Button Content="Search Student Grades"
+                        Style="{StaticResource SidebarButtonStyle}"
+                        Click="SearchGrades_Click"/>
+                <Button Content="Logout"
+                        Style="{StaticResource LogoutButtonStyle}"
+                        Margin="10,20,10,5"
+                        Click="Logout_Click"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Main Content -->
+        <Border Grid.Column="1"
+                Background="White"
+                CornerRadius="8"
+                Margin="5,10,10,10"
+                BorderBrush="#E0E0E0"
+                BorderThickness="1">
+            <ContentControl x:Name="MainContent" Margin="10"/>
+        </Border>
     </Grid>
 </Window>
