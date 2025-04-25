@@ -1,7 +1,5 @@
 ﻿using StudentManagementSystem.Models;
 using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -10,7 +8,8 @@ namespace StudentManagementSystem.Views
 	public partial class UserManagementView : UserControl
 	{
 		private readonly DataAccess dataAccess;
-		private List<User> users;
+		private bool isEditMode;
+		private User selectedUser;
 
 		public UserManagementView()
 		{
@@ -21,75 +20,115 @@ namespace StudentManagementSystem.Views
 
 		private void LoadUsers()
 		{
-			users = dataAccess.GetUsers();
-			UsersGrid.ItemsSource = users;
+			UsersGrid.ItemsSource = dataAccess.GetUsers();
 		}
 
 		private void AddUser_Click(object sender, RoutedEventArgs e)
 		{
-			UserForm userForm = new UserForm(null);
-			if (userForm.ShowDialog() == true)
-			{
-				try
-				{
-					dataAccess.AddUser(userForm.User);
-					LoadUsers();
-					MessageBox.Show("User added successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-				}
-				catch (SqlException ex)
-				{
-					MessageBox.Show($"Error adding user: {ex.Message}", "Database Error", MessageBoxButton.OK, MessageBoxImage.Error);
-				}
-			}
+			isEditMode = false;
+			selectedUser = null;
+			PanelTitle.Text = "Add User";
+			txtStudentId.Text = "";
+			txtUsername.Text = "";
+			txtPassword.Password = "";
+			txtNote.Text = "";
+			chkStatus.IsChecked = true;
+			InputPanel.Visibility = Visibility.Visible;
 		}
 
 		private void EditUser_Click(object sender, RoutedEventArgs e)
 		{
-			if (UsersGrid.SelectedItem is User selectedUser)
+			if (UsersGrid.SelectedItem is User user)
 			{
-				UserForm userForm = new UserForm(selectedUser);
-				if (userForm.ShowDialog() == true)
-				{
-					try
-					{
-						dataAccess.UpdateUser(userForm.User);
-						LoadUsers();
-						MessageBox.Show("User updated successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-					}
-					catch (SqlException ex)
-					{
-						MessageBox.Show($"Error updating user: {ex.Message}", "Database Error", MessageBoxButton.OK, MessageBoxImage.Error);
-					}
-				}
+				isEditMode = true;
+				selectedUser = user;
+				PanelTitle.Text = "Edit User";
+				txtStudentId.Text = user.IdStudent;
+				txtUsername.Text = user.Username;
+				txtPassword.Password = user.Password;
+				txtNote.Text = user.Note;
+				chkStatus.IsChecked = user.Status;
+				InputPanel.Visibility = Visibility.Visible;
 			}
 			else
 			{
-				MessageBox.Show("Please select a user to edit.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
+				MessageBox.Show("Please select a user to edit.", "Selection Error", MessageBoxButton.OK, MessageBoxImage.Warning);
 			}
 		}
 
 		private void DeleteUser_Click(object sender, RoutedEventArgs e)
 		{
-			if (UsersGrid.SelectedItem is User selectedUser)
+			if (UsersGrid.SelectedItem is User user)
 			{
-				if (MessageBox.Show($"Are you sure you want to delete {selectedUser.Username}?", "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+				var result = MessageBox.Show($"Are you sure you want to delete user {user.Username}?", "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Question);
+				if (result == MessageBoxResult.Yes)
 				{
 					try
 					{
-						dataAccess.DeleteUser(selectedUser.IdStudent);
+						dataAccess.DeleteUser(user.IdStudent); 
 						LoadUsers();
-						MessageBox.Show("User deleted successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
 					}
-					catch (SqlException ex)
+					catch (Exception ex)
 					{
-						MessageBox.Show($"Error deleting user: {ex.Message}", "Database Error", MessageBoxButton.OK, MessageBoxImage.Error);
+						MessageBox.Show($"Failed to delete user: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
 					}
 				}
 			}
 			else
 			{
-				MessageBox.Show("Please select a user to delete.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
+				MessageBox.Show("Please select a user to delete.", "Selection Error", MessageBoxButton.OK, MessageBoxImage.Warning);
 			}
+		}
+
+		private void SaveUser_Click(object sender, RoutedEventArgs e)
+		{
+			if (string.IsNullOrWhiteSpace(txtStudentId.Text) || string.IsNullOrWhiteSpace(txtUsername.Text) || string.IsNullOrWhiteSpace(txtPassword.Password))
+			{
+				MessageBox.Show("Please fill in all required fields.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+				return;
+			}
+
+			try
+			{
+				var user = new User
+				{
+					IdStudent = txtStudentId.Text,
+					Username = txtUsername.Text,
+					Password = txtPassword.Password,
+					Note = txtNote.Text,
+					Status = chkStatus.IsChecked ?? false,
+					CreatedAt = isEditMode ? selectedUser.CreatedAt : DateTime.Now,
+					ModifiedAt = DateTime.Now
+				};
+
+				if (isEditMode)
+				{
+					//user.Id = selectedUser.Id;
+					dataAccess.UpdateUser(user);
+				}
+				else
+				{
+					dataAccess.AddUser(user);
+				}
+
+				LoadUsers();
+				InputPanel.Visibility = Visibility.Collapsed;
+				MessageBox.Show("User saved successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show($"Failed to save user: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+			}
+		}
+
+		private void CancelInput_Click(object sender, RoutedEventArgs e)
+		{
+			InputPanel.Visibility = Visibility.Collapsed;
+		}
+
+		private void UsersGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		{
+			InputPanel.Visibility = Visibility.Collapsed;
 		}
 	}
 }

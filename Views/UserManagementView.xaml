@@ -4,16 +4,19 @@
              Background="#F5F7FA">
     <UserControl.Resources>
         <!-- Add Button Style -->
-        <Style x:Key="ActionButtonStyle" TargetType="Button">
+        <Style x:Key="AddButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="#4A90E2"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="Padding" Value="10,8"/>
-            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#357ABD"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="5"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center"
@@ -22,6 +25,7 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter Property="Background" Value="#357ABD"/>
+                                <Setter Property="BorderBrush" Value="#2C6499"/>
                                 <Setter Property="Cursor" Value="Hand"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
@@ -73,11 +77,14 @@
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="Padding" Value="10,8"/>
-            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#C0392B"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="5"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center"
@@ -86,6 +93,7 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter Property="Background" Value="#C0392B"/>
+                                <Setter Property="BorderBrush" Value="#A93226"/>
                                 <Setter Property="Cursor" Value="Hand"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
@@ -107,11 +115,12 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
             <!-- Header and Buttons -->
-            <StackPanel Margin="0,0,0,15">
+            <StackPanel Grid.Row="0" Margin="0,0,0,15">
                 <TextBlock Text="User Management"
                            FontSize="20"
                            FontWeight="Bold"
@@ -121,7 +130,7 @@
                     <Button Content="Add User"
                             Width="120"
                             Margin="5,0"
-                            Style="{StaticResource ActionButtonStyle}"
+                            Style="{StaticResource AddButtonStyle}"
                             Click="AddUser_Click"/>
                     <Button Content="Edit User"
                             Width="120"
@@ -136,9 +145,78 @@
                 </StackPanel>
             </StackPanel>
 
+            <!-- Input Panel -->
+            <Border x:Name="InputPanel"
+                    Grid.Row="1"
+                    Background="#FFFFFF"
+                    CornerRadius="5"
+                    BorderBrush="#E0E0E0"
+                    BorderThickness="1"
+                    Margin="0,0,0,8"
+                    Padding="10"
+                    Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock x:Name="PanelTitle"
+                               Text="Add User"
+                               FontSize="14"
+                               FontWeight="Bold"
+                               Foreground="#2C3E50"
+                               Margin="0,0,0,8"/>
+                    <TextBlock Text="Student ID"
+                               FontSize="12"
+                               Foreground="#2C3E50"
+                               Margin="0,0,0,5"/>
+                    <TextBox x:Name="txtStudentId"
+                             FontSize="12"
+                             Padding="5"
+                             Margin="0,0,0,5"/>
+                    <TextBlock Text="Username"
+                               FontSize="12"
+                               Foreground="#2C3E50"
+                               Margin="0,0,0,5"/>
+                    <TextBox x:Name="txtUsername"
+                             FontSize="12"
+                             Padding="5"
+                             Margin="0,0,0,5"/>
+                    <TextBlock Text="Password"
+                               FontSize="12"
+                               Foreground="#2C3E50"
+                               Margin="0,0,0,5"/>
+                    <PasswordBox x:Name="txtPassword"
+                                 FontSize="12"
+                                 Padding="5"
+                                 Margin="0,0,0,5"/>
+                    <TextBlock Text="Note"
+                               FontSize="12"
+                               Foreground="#2C3E50"
+                               Margin="0,0,0,5"/>
+                    <TextBox x:Name="txtNote"
+                             FontSize="12"
+                             Padding="5"
+                             Margin="0,0,0,5"/>
+                    <CheckBox x:Name="chkStatus"
+                              Content="Active"
+                              FontSize="12"
+                              Foreground="#2C3E50"
+                              Margin="0,0,0,8"/>
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Right">
+                        <Button Content="Save"
+                                Width="80"
+                                Margin="0,0,8,0"
+                                Style="{StaticResource AddButtonStyle}"
+                                Click="SaveUser_Click"/>
+                        <Button Content="Cancel"
+                                Width="80"
+                                Style="{StaticResource DeleteButtonStyle}"
+                                Click="CancelInput_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
             <!-- DataGrid -->
             <DataGrid x:Name="UsersGrid"
-                      Grid.Row="1"
+                      Grid.Row="2"
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
                       SelectionMode="Single"
@@ -148,7 +226,8 @@
                       AlternatingRowBackground="#F8F9FA"
                       CanUserSortColumns="True"
                       GridLinesVisibility="Horizontal"
-                      HorizontalGridLinesBrush="#E0E0E0">
+                      HorizontalGridLinesBrush="#E0E0E0"
+                      SelectionChanged="UsersGrid_SelectionChanged">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Student ID"
                                        Binding="{Binding IdStudent}"
@@ -232,7 +311,6 @@
 
                 <!-- DataGrid Styles -->
                 <DataGrid.Resources>
-                    <!-- Header Style -->
                     <Style TargetType="DataGridColumnHeader">
                         <Setter Property="Background" Value="#4A90E2"/>
                         <Setter Property="Foreground" Value="White"/>
@@ -260,8 +338,6 @@
                             </Trigger>
                         </Style.Triggers>
                     </Style>
-
-                    <!-- Row Style -->
                     <Style TargetType="DataGridRow">
                         <Setter Property="BorderThickness" Value="0"/>
                         <Style.Triggers>
@@ -273,8 +349,6 @@
                             </Trigger>
                         </Style.Triggers>
                     </Style>
-
-                    <!-- Cell Style -->
                     <Style TargetType="DataGridCell">
                         <Setter Property="BorderThickness" Value="0"/>
                         <Setter Property="Padding" Value="0"/>

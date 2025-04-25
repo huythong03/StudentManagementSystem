@@ -4,6 +4,8 @@
         Title="Admin Dashboard - Student Management System"
         Height="600"
         Width="800"
+        WindowStyle="None"
+        WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
         Background="#F5F7FA">
     <Window.Resources>
@@ -44,7 +46,7 @@
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="Padding" Value="10,8"/>
-            <Setter Property="Margin" Value="10,5"/>
+            <Setter Property="Margin" Value="0,0,5,0"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -68,6 +70,37 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Exit Button Style -->
+        <Style x:Key="ExitButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#C0392B"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="5,0,0,0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="5"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#A93226"/>
+                                <Setter Property="Cursor" Value="Hand"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#922B21"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Grid>
@@ -85,11 +118,15 @@
                 <Border Background="#233140"
                         Padding="10"
                         Margin="0,0,0,10">
-                    <TextBlock Text="Admin Menu"
-                              Foreground="White"
-                              FontSize="16"
-                              FontWeight="SemiBold"
-                              HorizontalAlignment="Center"/>
+                    <StackPanel>
+                        
+                        <TextBlock x:Name="GreetingTextBlock"
+                                   Text="Welcome Administrator"
+                                   Foreground="White"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,5,0,0"/>
+                    </StackPanel>
                 </Border>
 
                 <!-- Buttons -->
@@ -117,10 +154,19 @@
                 <Button Content="Search Student Grades"
                         Style="{StaticResource SidebarButtonStyle}"
                         Click="SearchGrades_Click"/>
-                <Button Content="Logout"
-                        Style="{StaticResource LogoutButtonStyle}"
-                        Margin="10,20,10,5"
-                        Click="Logout_Click"/>
+
+                <!-- Logout and Exit Buttons -->
+                <StackPanel Orientation="Horizontal"
+                            Margin="10,20,10,5">
+                    <Button Content="Logout"
+                            Width="80"
+                            Style="{StaticResource LogoutButtonStyle}"
+                            Click="Logout_Click"/>
+                    <Button Content="Exit"
+                            Width="80"
+                            Style="{StaticResource ExitButtonStyle}"
+                            Click="Exit_Click"/>
+                </StackPanel>
             </StackPanel>
         </Border>
 
@@ -131,7 +177,37 @@
                 Margin="5,10,10,10"
                 BorderBrush="#E0E0E0"
                 BorderThickness="1">
-            <ContentControl x:Name="MainContent" Margin="10"/>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header with Date and Time -->
+                <Grid Grid.Row="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <StackPanel Grid.Row="1"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                Margin="10,0,10,10">
+                        <TextBlock x:Name="DateTextBlock"
+                                   FontSize="14"
+                                   Foreground="#2C3E50"
+                                   Margin="0,0,15,0"/>
+                        <TextBlock x:Name="TimeTextBlock"
+                                   FontSize="14"
+                                   Foreground="#2C3E50"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Content Area -->
+                <ContentControl x:Name="MainContent"
+                                Grid.Row="1"
+                                Margin="10"/>
+            </Grid>
         </Border>
     </Grid>
 </Window>

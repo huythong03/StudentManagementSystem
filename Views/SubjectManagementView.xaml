@@ -7,8 +7,8 @@
         <Style x:Key="AddButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="#4A90E2"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="8,6"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="BorderBrush" Value="#357ABD"/>
             <Setter Property="Template">
@@ -41,8 +41,8 @@
         <Style x:Key="EditButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="#F1C40F"/>
             <Setter Property="Foreground" Value="#2C3E50"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="8,6"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="BorderBrush" Value="#D4AC0D"/>
             <Setter Property="Template">
@@ -75,8 +75,8 @@
         <Style x:Key="DeleteButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="#E74C3C"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="8,6"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="BorderBrush" Value="#C0392B"/>
             <Setter Property="Template">
@@ -111,42 +111,91 @@
             Margin="20"
             BorderBrush="#E0E0E0"
             BorderThickness="1"
-            Padding="20">
+            Padding="10">
         <Grid>
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
             <!-- Header and Buttons -->
-            <StackPanel Margin="0,0,0,15">
+            <StackPanel Grid.Row="0" Margin="0,0,0,8">
                 <TextBlock Text="Subject Management"
-                           FontSize="20"
+                           FontSize="18"
                            FontWeight="Bold"
                            Foreground="#2C3E50"
-                           Margin="0,0,0,10"/>
+                           Margin="0,0,0,8"/>
                 <StackPanel Orientation="Horizontal">
                     <Button Content="Add Subject"
-                            Width="120"
-                            Margin="5"
+                            Width="100"
+                            Margin="5,0"
                             Style="{StaticResource AddButtonStyle}"
                             Click="AddSubject_Click"/>
                     <Button Content="Edit Subject"
-                            Width="120"
-                            Margin="5"
+                            Width="100"
+                            Margin="5,0"
                             Style="{StaticResource EditButtonStyle}"
                             Click="EditSubject_Click"/>
                     <Button Content="Delete Subject"
-                            Width="120"
-                            Margin="5"
+                            Width="100"
+                            Margin="5,0"
                             Style="{StaticResource DeleteButtonStyle}"
                             Click="DeleteSubject_Click"/>
                 </StackPanel>
             </StackPanel>
 
+            <!-- Input Panel -->
+            <Border x:Name="InputPanel"
+                    Grid.Row="1"
+                    Background="#FFFFFF"
+                    CornerRadius="5"
+                    BorderBrush="#E0E0E0"
+                    BorderThickness="1"
+                    Margin="0,0,0,8"
+                    Padding="10"
+                    Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock x:Name="PanelTitle"
+                               Text="Add Subject"
+                               FontSize="14"
+                               FontWeight="Bold"
+                               Foreground="#2C3E50"
+                               Margin="0,0,0,8"/>
+                    <TextBlock Text="ID"
+                               FontSize="12"
+                               Foreground="#2C3E50"
+                               Margin="0,0,0,5"/>
+                    <TextBox x:Name="txtId"
+                             FontSize="12"
+                             Padding="5"
+                             Margin="0,0,0,5"/>
+                    <TextBlock Text="Name"
+                               FontSize="12"
+                               Foreground="#2C3E50"
+                               Margin="0,0,0,5"/>
+                    <TextBox x:Name="txtName"
+                             FontSize="12"
+                             Padding="5"
+                             Margin="0,0,0,8"/>
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Right">
+                        <Button Content="Save"
+                                Width="80"
+                                Margin="0,0,8,0"
+                                Style="{StaticResource AddButtonStyle}"
+                                Click="SaveSubject_Click"/>
+                        <Button Content="Cancel"
+                                Width="80"
+                                Style="{StaticResource DeleteButtonStyle}"
+                                Click="CancelInput_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
             <!-- DataGrid -->
             <DataGrid x:Name="SubjectsGrid"
-                      Grid.Row="1"
+                      Grid.Row="2"
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
                       SelectionMode="Single"
@@ -156,27 +205,28 @@
                       AlternatingRowBackground="#F8F9FA"
                       CanUserSortColumns="True"
                       GridLinesVisibility="Horizontal"
-                      HorizontalGridLinesBrush="#E0E0E0">
+                      HorizontalGridLinesBrush="#E0E0E0"
+                      SelectionChanged="SubjectsGrid_SelectionChanged">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="ID"
                                        Binding="{Binding Id}"
-                                       Width="100"
-                                       FontSize="14">
+                                       Width="150"
+                                       FontSize="12">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="Padding" Value="10,5"/>
+                                <Setter Property="Padding" Value="8,5"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
                     <DataGridTextColumn Header="Name"
                                        Binding="{Binding Name}"
                                        Width="*"
-                                       FontSize="14">
+                                       FontSize="12">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="Padding" Value="10,5"/>
+                                <Setter Property="Padding" Value="8,5"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
@@ -184,13 +234,12 @@
 
                 <!-- DataGrid Styles -->
                 <DataGrid.Resources>
-                    <!-- Header Style -->
                     <Style TargetType="DataGridColumnHeader">
                         <Setter Property="Background" Value="#4A90E2"/>
                         <Setter Property="Foreground" Value="White"/>
                         <Setter Property="FontWeight" Value="SemiBold"/>
-                        <Setter Property="FontSize" Value="14"/>
-                        <Setter Property="Padding" Value="10"/>
+                        <Setter Property="FontSize" Value="12"/>
+                        <Setter Property="Padding" Value="8"/>
                         <Setter Property="BorderThickness" Value="0,0,1,1"/>
                         <Setter Property="BorderBrush" Value="#357ABD"/>
                         <Setter Property="Template">
@@ -212,8 +261,6 @@
                             </Trigger>
                         </Style.Triggers>
                     </Style>
-
-                    <!-- Row Style -->
                     <Style TargetType="DataGridRow">
                         <Setter Property="BorderThickness" Value="0"/>
                         <Style.Triggers>
@@ -225,8 +272,6 @@
                             </Trigger>
                         </Style.Triggers>
                     </Style>
-
-                    <!-- Cell Style -->
                     <Style TargetType="DataGridCell">
                         <Setter Property="BorderThickness" Value="0"/>
                         <Setter Property="Padding" Value="0"/>

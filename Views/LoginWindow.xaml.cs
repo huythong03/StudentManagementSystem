@@ -1,4 +1,4 @@
-﻿using StudentManagementSystem.Views;
+﻿using StudentManagementSystem.Models;
 using System.Windows;
 
 namespace StudentManagementSystem.Views
@@ -27,6 +27,13 @@ namespace StudentManagementSystem.Views
 			if (dataAccess.ValidateLogin(username, password))
 			{
 				string role = dataAccess.GetUserRole(username);
+				User user = dataAccess.GetUserByUsername(username);
+				if (user == null)
+				{
+					MessageBox.Show("User not found.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+					return;
+				}
+
 				if (role == "admin")
 				{
 					AdminDashboard adminDashboard = new AdminDashboard();
@@ -34,7 +41,7 @@ namespace StudentManagementSystem.Views
 				}
 				else
 				{
-					UserDashboard userDashboard = new UserDashboard(username);
+					UserDashboard userDashboard = new UserDashboard(user);
 					userDashboard.Show();
 				}
 				Close();
@@ -43,6 +50,11 @@ namespace StudentManagementSystem.Views
 			{
 				MessageBox.Show("Invalid username or password.", "Login Failed", MessageBoxButton.OK, MessageBoxImage.Error);
 			}
+		}
+
+		private void Exit_Click(object sender, RoutedEventArgs e)
+		{
+			Application.Current.Shutdown();
 		}
 	}
 }

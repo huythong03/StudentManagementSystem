@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using StudentManagementSystem.Models;
 
 namespace StudentManagementSystem
@@ -22,16 +23,251 @@ namespace StudentManagementSystem
 			{
 				SqlConnection conn = new SqlConnection(connectionString);
 				conn.Open();
+				Debug.WriteLine("GetConnection: Database connection opened successfully.");
 				return conn;
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"GetConnection: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Failed to connect to the database.", ex);
+			}
+		}
+
+		public string GetNextRoleId()
+		{
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = "SELECT Id FROM [Role] WHERE Id LIKE 'R%'";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						List<int> numbers = new List<int>();
+						using (SqlDataReader reader = cmd.ExecuteReader())
+						{
+							while (reader.Read())
+							{
+								string id = reader.GetString(reader.GetOrdinal("Id"));
+								if (id.StartsWith("R") && int.TryParse(id.Substring(1), out int number))
+								{
+									numbers.Add(number);
+								}
+							}
+						}
+
+						int nextNumber = numbers.Count > 0 ? numbers.Max() + 1 : 1;
+						string nextId = $"R{nextNumber}";
+						Debug.WriteLine($"GetNextRoleId: Generated ID = {nextId}");
+						return nextId;
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"GetNextRoleId: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error generating next role ID.", ex);
+			}
+		}
+
+		public string GetNextUserRoleId()
+		{
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = "SELECT Id FROM [UserRole] WHERE Id LIKE 'UR%'";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						List<int> numbers = new List<int>();
+						using (SqlDataReader reader = cmd.ExecuteReader())
+						{
+							while (reader.Read())
+							{
+								string id = reader.GetString(reader.GetOrdinal("Id"));
+								if (id.StartsWith("UR") && int.TryParse(id.Substring(2), out int number))
+								{
+									numbers.Add(number);
+								}
+							}
+						}
+
+						int nextNumber = numbers.Count > 0 ? numbers.Max() + 1 : 1;
+						string nextId = $"UR{nextNumber.ToString("D4")}";
+						Debug.WriteLine($"GetNextUserRoleId: Generated ID = {nextId}");
+						return nextId;
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"GetNextUserRoleId: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error generating next user role ID.", ex);
+			}
+		}
+
+		public List<Student> GetStudentIds()
+		{
+			List<Student> students = new List<Student>();
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = "SELECT Id FROM [Student] WHERE Id IS NOT NULL ORDER BY Id";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						using (SqlDataReader reader = cmd.ExecuteReader())
+						{
+							while (reader.Read())
+							{
+								string id = reader.GetString(reader.GetOrdinal("Id"));
+								if (!string.IsNullOrWhiteSpace(id))
+								{
+									students.Add(new Student { Id = id });
+								}
+							}
+						}
+					}
+				}
+				if (students.Count == 0)
+				{
+					Debug.WriteLine("GetStudentIds: No valid student IDs found.");
+					throw new Exception("No valid student IDs found in the database.");
+				}
+				Debug.WriteLine($"GetStudentIds: Found {students.Count} student IDs.");
+				return students;
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"GetStudentIds: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error retrieving student IDs.", ex);
+			}
+		}
+
+		public List<User> GetUserStudentIds()
+		{
+			List<User> users = new List<User>();
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = "SELECT IdStudent FROM [User] WHERE IdStudent IS NOT NULL ORDER BY IdStudent";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						using (SqlDataReader reader = cmd.ExecuteReader())
+						{
+							while (reader.Read())
+							{
+								string idStudent = reader.GetString(reader.GetOrdinal("IdStudent"));
+								if (!string.IsNullOrWhiteSpace(idStudent))
+								{
+									users.Add(new User { IdStudent = idStudent });
+								}
+							}
+						}
+					}
+				}
+				if (users.Count == 0)
+				{
+					Debug.WriteLine("GetUserStudentIds: No valid IdStudent found in [User].");
+					throw new Exception("No valid IdStudent found in the User table.");
+				}
+				Debug.WriteLine($"GetUserStudentIds: Found {users.Count} IdStudent.");
+				return users;
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"GetUserStudentIds: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error retrieving IdStudent from User table.", ex);
+			}
+		}
+
+		public bool UserRoleExists(string idStudent, string idRole)
+		{
+			if (string.IsNullOrWhiteSpace(idStudent) || string.IsNullOrWhiteSpace(idRole))
+			{
+				Debug.WriteLine($"UserRoleExists: Invalid input (IdStudent='{idStudent}', IdRole='{idRole}')");
+				return false;
+			}
+
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = "SELECT COUNT(*) FROM [UserRole] WHERE IdStudent = @IdStudent AND IdRole = @IdRole";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						cmd.Parameters.AddWithValue("@IdStudent", idStudent);
+						cmd.Parameters.AddWithValue("@IdRole", idRole);
+						int count = (int)cmd.ExecuteScalar();
+						Debug.WriteLine($"UserRoleExists: IdStudent={idStudent}, IdRole={idRole}, Exists={count > 0}");
+						return count > 0;
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"UserRoleExists: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error checking user role existence.", ex);
+			}
+		}
+
+		public User GetUserByUsername(string username)
+		{
+			if (string.IsNullOrWhiteSpace(username))
+			{
+				Debug.WriteLine("GetUserByUsername: Invalid username.");
+				return null;
+			}
+
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = @"
+                        SELECT IdStudent, Username, Password, Note, Status, CreatedAt, ModifiedAt 
+                        FROM [User] 
+                        WHERE Username = @Username";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						cmd.Parameters.AddWithValue("@Username", username);
+						using (SqlDataReader reader = cmd.ExecuteReader())
+						{
+							if (reader.Read())
+							{
+								User user = new User
+								{
+									IdStudent = reader.GetString(reader.GetOrdinal("IdStudent")),
+									Username = reader.GetString(reader.GetOrdinal("Username")),
+									Password = reader.GetString(reader.GetOrdinal("Password")),
+									Note = reader.IsDBNull(reader.GetOrdinal("Note")) ? null : reader.GetString(reader.GetOrdinal("Note")),
+									Status = reader.GetBoolean(reader.GetOrdinal("Status")),
+									CreatedAt = reader.GetDateTime(reader.GetOrdinal("CreatedAt")),
+									ModifiedAt = reader.GetDateTime(reader.GetOrdinal("ModifiedAt"))
+								};
+								Debug.WriteLine($"GetUserByUsername: Found user (Username={username}, IdStudent={user.IdStudent})");
+								return user;
+							}
+						}
+					}
+				}
+				Debug.WriteLine($"GetUserByUsername: No user found for Username={username}");
+				return null;
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"GetUserByUsername: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error retrieving user by username.", ex);
 			}
 		}
 
 		public bool ValidateLogin(string username, string password)
 		{
+			if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+			{
+				Debug.WriteLine($"ValidateLogin: Invalid input (Username='{username}', Password='[Hidden]')");
+				return false;
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -41,18 +277,27 @@ namespace StudentManagementSystem
 					{
 						cmd.Parameters.AddWithValue("@Username", username);
 						cmd.Parameters.AddWithValue("@Password", password);
-						return (int)cmd.ExecuteScalar() > 0;
+						int count = (int)cmd.ExecuteScalar();
+						Debug.WriteLine($"ValidateLogin: Username={username}, Valid={count > 0}");
+						return count > 0;
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"ValidateLogin: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error validating login credentials.", ex);
 			}
 		}
 
 		public string GetUserRole(string username)
 		{
+			if (string.IsNullOrWhiteSpace(username))
+			{
+				Debug.WriteLine("GetUserRole: Invalid username.");
+				return "user";
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -66,18 +311,27 @@ namespace StudentManagementSystem
 					using (SqlCommand cmd = new SqlCommand(query, conn))
 					{
 						cmd.Parameters.AddWithValue("@Username", username);
-						return cmd.ExecuteScalar()?.ToString() ?? "user";
+						string role = cmd.ExecuteScalar()?.ToString() ?? "user";
+						Debug.WriteLine($"GetUserRole: Username={username}, Role={role}");
+						return role;
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"GetUserRole: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error retrieving user role.", ex);
 			}
 		}
 
 		public string GetStudentIdByUsername(string username)
 		{
+			if (string.IsNullOrWhiteSpace(username))
+			{
+				Debug.WriteLine("GetStudentIdByUsername: Invalid username.");
+				return null;
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -86,12 +340,15 @@ namespace StudentManagementSystem
 					using (SqlCommand cmd = new SqlCommand(query, conn))
 					{
 						cmd.Parameters.AddWithValue("@Username", username);
-						return cmd.ExecuteScalar()?.ToString();
+						string idStudent = cmd.ExecuteScalar()?.ToString();
+						Debug.WriteLine($"GetStudentIdByUsername: Username={username}, IdStudent={idStudent ?? "null"}");
+						return idStudent;
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"GetStudentIdByUsername: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error retrieving student ID.", ex);
 			}
 		}
@@ -122,16 +379,24 @@ namespace StudentManagementSystem
 						}
 					}
 				}
+				Debug.WriteLine($"GetStudents: Found {students.Count} students.");
 				return students;
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"GetStudents: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error retrieving students.", ex);
 			}
 		}
 
 		public void AddStudent(Student student)
 		{
+			if (student == null || string.IsNullOrWhiteSpace(student.Id) || string.IsNullOrWhiteSpace(student.Name))
+			{
+				Debug.WriteLine($"AddStudent: Invalid student data (Id='{student?.Id}', Name='{student?.Name}')");
+				throw new ArgumentException("Student data is invalid.");
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -146,18 +411,26 @@ namespace StudentManagementSystem
 						cmd.Parameters.AddWithValue("@BOF", student.BOF);
 						cmd.Parameters.AddWithValue("@IdProvince", student.IdProvince);
 						cmd.Parameters.AddWithValue("@Gender", student.Gender);
+						Debug.WriteLine($"AddStudent: Inserting Id={student.Id}, Name={student.Name}");
 						cmd.ExecuteNonQuery();
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"AddStudent: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error adding student.", ex);
 			}
 		}
 
 		public void UpdateStudent(Student student)
 		{
+			if (student == null || string.IsNullOrWhiteSpace(student.Id) || string.IsNullOrWhiteSpace(student.Name))
+			{
+				Debug.WriteLine($"UpdateStudent: Invalid student data (Id='{student?.Id}', Name='{student?.Name}')");
+				throw new ArgumentException("Student data is invalid.");
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -173,18 +446,31 @@ namespace StudentManagementSystem
 						cmd.Parameters.AddWithValue("@BOF", student.BOF);
 						cmd.Parameters.AddWithValue("@IdProvince", student.IdProvince);
 						cmd.Parameters.AddWithValue("@Gender", student.Gender);
-						cmd.ExecuteNonQuery();
+						Debug.WriteLine($"UpdateStudent: Updating Id={student.Id}, Name={student.Name}");
+						int rowsAffected = cmd.ExecuteNonQuery();
+						if (rowsAffected == 0)
+						{
+							Debug.WriteLine($"UpdateStudent: No rows affected for Id={student.Id}");
+							throw new Exception("Failed to update student. No matching record found.");
+						}
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"UpdateStudent: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error updating student.", ex);
 			}
 		}
 
 		public void DeleteStudent(string id)
 		{
+			if (string.IsNullOrWhiteSpace(id))
+			{
+				Debug.WriteLine("DeleteStudent: Invalid Id.");
+				throw new ArgumentException("Student ID is invalid.");
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -193,12 +479,14 @@ namespace StudentManagementSystem
 					using (SqlCommand cmd = new SqlCommand(query, conn))
 					{
 						cmd.Parameters.AddWithValue("@Id", id);
+						Debug.WriteLine($"DeleteStudent: Deleting Id={id}");
 						cmd.ExecuteNonQuery();
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"DeleteStudent: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error deleting student.", ex);
 			}
 		}
@@ -226,16 +514,24 @@ namespace StudentManagementSystem
 						}
 					}
 				}
+				Debug.WriteLine($"GetProvinces: Found {provinces.Count} provinces.");
 				return provinces;
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"GetProvinces: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error retrieving provinces.", ex);
 			}
 		}
 
 		public void AddProvince(Province province)
 		{
+			if (province == null || string.IsNullOrWhiteSpace(province.Name))
+			{
+				Debug.WriteLine($"AddProvince: Invalid province data (Id={province?.Id}, Name='{province?.Name}')");
+				throw new ArgumentException("Province data is invalid.");
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -245,18 +541,26 @@ namespace StudentManagementSystem
 					{
 						cmd.Parameters.AddWithValue("@Id", province.Id);
 						cmd.Parameters.AddWithValue("@Name", province.Name);
+						Debug.WriteLine($"AddProvince: Inserting Id={province.Id}, Name={province.Name}");
 						cmd.ExecuteNonQuery();
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"AddProvince: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error adding province.", ex);
 			}
 		}
 
 		public void UpdateProvince(Province province)
 		{
+			if (province == null || string.IsNullOrWhiteSpace(province.Name))
+			{
+				Debug.WriteLine($"UpdateProvince: Invalid province data (Id={province?.Id}, Name='{province?.Name}')");
+				throw new ArgumentException("Province data is invalid.");
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -266,12 +570,19 @@ namespace StudentManagementSystem
 					{
 						cmd.Parameters.AddWithValue("@Id", province.Id);
 						cmd.Parameters.AddWithValue("@Name", province.Name);
-						cmd.ExecuteNonQuery();
+						Debug.WriteLine($"UpdateProvince: Updating Id={province.Id}, Name={province.Name}");
+						int rowsAffected = cmd.ExecuteNonQuery();
+						if (rowsAffected == 0)
+						{
+							Debug.WriteLine($"UpdateProvince: No rows affected for Id={province.Id}");
+							throw new Exception("Failed to update province. No matching record found.");
+						}
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"UpdateProvince: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error updating province.", ex);
 			}
 		}
@@ -286,12 +597,14 @@ namespace StudentManagementSystem
 					using (SqlCommand cmd = new SqlCommand(query, conn))
 					{
 						cmd.Parameters.AddWithValue("@Id", id);
+						Debug.WriteLine($"DeleteProvince: Deleting Id={id}");
 						cmd.ExecuteNonQuery();
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"DeleteProvince: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error deleting province.", ex);
 			}
 		}
@@ -319,16 +632,24 @@ namespace StudentManagementSystem
 						}
 					}
 				}
+				Debug.WriteLine($"GetSubjects: Found {subjects.Count} subjects.");
 				return subjects;
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"GetSubjects: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error retrieving subjects.", ex);
 			}
 		}
 
 		public void AddSubject(Subject subject)
 		{
+			if (subject == null || string.IsNullOrWhiteSpace(subject.Id) || string.IsNullOrWhiteSpace(subject.Name))
+			{
+				Debug.WriteLine($"AddSubject: Invalid subject data (Id='{subject?.Id}', Name='{subject?.Name}')");
+				throw new ArgumentException("Subject data is invalid.");
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -338,18 +659,26 @@ namespace StudentManagementSystem
 					{
 						cmd.Parameters.AddWithValue("@Id", subject.Id);
 						cmd.Parameters.AddWithValue("@Name", subject.Name);
+						Debug.WriteLine($"AddSubject: Inserting Id={subject.Id}, Name={subject.Name}");
 						cmd.ExecuteNonQuery();
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"AddSubject: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error adding subject.", ex);
 			}
 		}
 
 		public void UpdateSubject(Subject subject)
 		{
+			if (subject == null || string.IsNullOrWhiteSpace(subject.Id) || string.IsNullOrWhiteSpace(subject.Name))
+			{
+				Debug.WriteLine($"UpdateSubject: Invalid subject data (Id='{subject?.Id}', Name='{subject?.Name}')");
+				throw new ArgumentException("Subject data is invalid.");
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -359,18 +688,31 @@ namespace StudentManagementSystem
 					{
 						cmd.Parameters.AddWithValue("@Id", subject.Id);
 						cmd.Parameters.AddWithValue("@Name", subject.Name);
-						cmd.ExecuteNonQuery();
+						Debug.WriteLine($"UpdateSubject: Updating Id={subject.Id}, Name={subject.Name}");
+						int rowsAffected = cmd.ExecuteNonQuery();
+						if (rowsAffected == 0)
+						{
+							Debug.WriteLine($"UpdateSubject: No rows affected for Id={subject.Id}");
+							throw new Exception("Failed to update subject. No matching record found.");
+						}
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"UpdateSubject: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error updating subject.", ex);
 			}
 		}
 
 		public void DeleteSubject(string id)
 		{
+			if (string.IsNullOrWhiteSpace(id))
+			{
+				Debug.WriteLine("DeleteSubject: Invalid Id.");
+				throw new ArgumentException("Subject ID is invalid.");
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -379,12 +721,14 @@ namespace StudentManagementSystem
 					using (SqlCommand cmd = new SqlCommand(query, conn))
 					{
 						cmd.Parameters.AddWithValue("@Id", id);
+						Debug.WriteLine($"DeleteSubject: Deleting Id={id}");
 						cmd.ExecuteNonQuery();
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"DeleteSubject: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error deleting subject.", ex);
 			}
 		}
@@ -417,16 +761,24 @@ namespace StudentManagementSystem
 						}
 					}
 				}
+				Debug.WriteLine($"GetUsers: Found {users.Count} users.");
 				return users;
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"GetUsers: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error retrieving users.", ex);
 			}
 		}
 
 		public void AddUser(User user)
 		{
+			if (user == null || string.IsNullOrWhiteSpace(user.IdStudent) || string.IsNullOrWhiteSpace(user.Username) || string.IsNullOrWhiteSpace(user.Password))
+			{
+				Debug.WriteLine($"AddUser: Invalid user data (IdStudent='{user?.IdStudent}', Username='{user?.Username}')");
+				throw new ArgumentException("User data is invalid.");
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -443,18 +795,26 @@ namespace StudentManagementSystem
 						cmd.Parameters.AddWithValue("@Status", user.Status);
 						cmd.Parameters.AddWithValue("@CreatedAt", user.CreatedAt);
 						cmd.Parameters.AddWithValue("@ModifiedAt", user.ModifiedAt);
+						Debug.WriteLine($"AddUser: Inserting IdStudent={user.IdStudent}, Username={user.Username}");
 						cmd.ExecuteNonQuery();
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"AddUser: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error adding user.", ex);
 			}
 		}
 
 		public void UpdateUser(User user)
 		{
+			if (user == null || string.IsNullOrWhiteSpace(user.IdStudent) || string.IsNullOrWhiteSpace(user.Username) || string.IsNullOrWhiteSpace(user.Password))
+			{
+				Debug.WriteLine($"UpdateUser: Invalid user data (IdStudent='{user?.IdStudent}', Username='{user?.Username}')");
+				throw new ArgumentException("User data is invalid.");
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -471,18 +831,31 @@ namespace StudentManagementSystem
 						cmd.Parameters.AddWithValue("@Note", (object)user.Note ?? DBNull.Value);
 						cmd.Parameters.AddWithValue("@Status", user.Status);
 						cmd.Parameters.AddWithValue("@ModifiedAt", user.ModifiedAt);
-						cmd.ExecuteNonQuery();
+						Debug.WriteLine($"UpdateUser: Updating IdStudent={user.IdStudent}, Username={user.Username}");
+						int rowsAffected = cmd.ExecuteNonQuery();
+						if (rowsAffected == 0)
+						{
+							Debug.WriteLine($"UpdateUser: No rows affected for IdStudent={user.IdStudent}");
+							throw new Exception("Failed to update user. No matching record found.");
+						}
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"UpdateUser: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error updating user.", ex);
 			}
 		}
 
 		public void DeleteUser(string idStudent)
 		{
+			if (string.IsNullOrWhiteSpace(idStudent))
+			{
+				Debug.WriteLine("DeleteUser: Invalid IdStudent.");
+				throw new ArgumentException("User ID is invalid.");
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -491,18 +864,26 @@ namespace StudentManagementSystem
 					using (SqlCommand cmd = new SqlCommand(query, conn))
 					{
 						cmd.Parameters.AddWithValue("@IdStudent", idStudent);
+						Debug.WriteLine($"DeleteUser: Deleting IdStudent={idStudent}");
 						cmd.ExecuteNonQuery();
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"DeleteUser: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error deleting user.", ex);
 			}
 		}
 
 		public void UpdateUserPassword(string username, string newPassword)
 		{
+			if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(newPassword))
+			{
+				Debug.WriteLine($"UpdateUserPassword: Invalid input (Username='{username}', Password='[Hidden]')");
+				throw new ArgumentException("Username or password is invalid.");
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -513,12 +894,19 @@ namespace StudentManagementSystem
 						cmd.Parameters.AddWithValue("@Username", username);
 						cmd.Parameters.AddWithValue("@Password", newPassword);
 						cmd.Parameters.AddWithValue("@ModifiedAt", DateTime.Now);
-						cmd.ExecuteNonQuery();
+						Debug.WriteLine($"UpdateUserPassword: Updating password for Username={username}");
+						int rowsAffected = cmd.ExecuteNonQuery();
+						if (rowsAffected == 0)
+						{
+							Debug.WriteLine($"UpdateUserPassword: No rows affected for Username={username}");
+							throw new Exception("Failed to update password. No matching record found.");
+						}
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"UpdateUserPassword: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error updating user password.", ex);
 			}
 		}
@@ -530,7 +918,11 @@ namespace StudentManagementSystem
 			{
 				using (SqlConnection conn = GetConnection())
 				{
-					string query = "SELECT Id, Name, Status FROM [Role]";
+					string query = @"
+                        SELECT Id, Name, Status 
+                        FROM [Role] 
+                        WHERE Id LIKE 'R%' 
+                        ORDER BY CAST(SUBSTRING(Id, 2, LEN(Id)) AS INT)";
 					using (SqlCommand cmd = new SqlCommand(query, conn))
 					{
 						using (SqlDataReader reader = cmd.ExecuteReader())
@@ -547,16 +939,24 @@ namespace StudentManagementSystem
 						}
 					}
 				}
+				Debug.WriteLine($"GetRoles: Found {roles.Count} roles.");
 				return roles;
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"GetRoles: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error retrieving roles.", ex);
 			}
 		}
 
 		public void AddRole(Role role)
 		{
+			if (role == null || string.IsNullOrWhiteSpace(role.Id) || string.IsNullOrWhiteSpace(role.Name))
+			{
+				Debug.WriteLine($"AddRole: Invalid role data (Id='{role?.Id}', Name='{role?.Name}')");
+				throw new ArgumentException("Role data is invalid.");
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -567,18 +967,26 @@ namespace StudentManagementSystem
 						cmd.Parameters.AddWithValue("@Id", role.Id);
 						cmd.Parameters.AddWithValue("@Name", role.Name);
 						cmd.Parameters.AddWithValue("@Status", role.Status);
+						Debug.WriteLine($"AddRole: Inserting Id={role.Id}, Name={role.Name}");
 						cmd.ExecuteNonQuery();
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"AddRole: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error adding role.", ex);
 			}
 		}
 
 		public void UpdateRole(Role role)
 		{
+			if (role == null || string.IsNullOrWhiteSpace(role.Id) || string.IsNullOrWhiteSpace(role.Name))
+			{
+				Debug.WriteLine($"UpdateRole: Invalid role data (Id='{role?.Id}', Name='{role?.Name}')");
+				throw new ArgumentException("Role data is invalid.");
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -589,18 +997,31 @@ namespace StudentManagementSystem
 						cmd.Parameters.AddWithValue("@Id", role.Id);
 						cmd.Parameters.AddWithValue("@Name", role.Name);
 						cmd.Parameters.AddWithValue("@Status", role.Status);
-						cmd.ExecuteNonQuery();
+						Debug.WriteLine($"UpdateRole: Updating Id={role.Id}, Name={role.Name}");
+						int rowsAffected = cmd.ExecuteNonQuery();
+						if (rowsAffected == 0)
+						{
+							Debug.WriteLine($"UpdateRole: No rows affected for Id={role.Id}");
+							throw new Exception("Failed to update role. No matching record found.");
+						}
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"UpdateRole: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error updating role.", ex);
 			}
 		}
 
 		public void DeleteRole(string id)
 		{
+			if (string.IsNullOrWhiteSpace(id))
+			{
+				Debug.WriteLine("DeleteRole: Invalid Id.");
+				throw new ArgumentException("Role ID is invalid.");
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -609,12 +1030,14 @@ namespace StudentManagementSystem
 					using (SqlCommand cmd = new SqlCommand(query, conn))
 					{
 						cmd.Parameters.AddWithValue("@Id", id);
+						Debug.WriteLine($"DeleteRole: Deleting Id={id}");
 						cmd.ExecuteNonQuery();
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"DeleteRole: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error deleting role.", ex);
 			}
 		}
@@ -626,7 +1049,7 @@ namespace StudentManagementSystem
 			{
 				using (SqlConnection conn = GetConnection())
 				{
-					string query = "SELECT Id, IdStudent, IdRole FROM [UserRole]";
+					string query = "SELECT Id, IdStudent, IdRole FROM [UserRole] ORDER BY CAST(SUBSTRING(Id, 3, LEN(Id)) AS INT)";
 					using (SqlCommand cmd = new SqlCommand(query, conn))
 					{
 						using (SqlDataReader reader = cmd.ExecuteReader())
@@ -643,16 +1066,24 @@ namespace StudentManagementSystem
 						}
 					}
 				}
+				Debug.WriteLine($"GetUserRoles: Found {userRoles.Count} user roles.");
 				return userRoles;
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"GetUserRoles: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error retrieving user roles.", ex);
 			}
 		}
 
 		public void AddUserRole(UserRole userRole)
 		{
+			if (userRole == null || string.IsNullOrWhiteSpace(userRole.Id) || string.IsNullOrWhiteSpace(userRole.IdStudent) || string.IsNullOrWhiteSpace(userRole.IdRole))
+			{
+				Debug.WriteLine($"AddUserRole: Invalid UserRole (Id='{userRole?.Id}', IdStudent='{userRole?.IdStudent}', IdRole='{userRole?.IdRole}')");
+				throw new ArgumentException("UserRole data is invalid.");
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -660,22 +1091,34 @@ namespace StudentManagementSystem
 					string query = "INSERT INTO [UserRole] (Id, IdStudent, IdRole) VALUES (@Id, @IdStudent, @IdRole)";
 					using (SqlCommand cmd = new SqlCommand(query, conn))
 					{
-						//cmd.Image = new Image();
 						cmd.Parameters.AddWithValue("@Id", userRole.Id);
 						cmd.Parameters.AddWithValue("@IdStudent", userRole.IdStudent);
 						cmd.Parameters.AddWithValue("@IdRole", userRole.IdRole);
-						cmd.ExecuteNonQuery();
+						Debug.WriteLine($"AddUserRole: Inserting Id={userRole.Id}, IdStudent={userRole.IdStudent}, IdRole={userRole.IdRole}");
+						int rowsAffected = cmd.ExecuteNonQuery();
+						if (rowsAffected == 0)
+						{
+							Debug.WriteLine("AddUserRole: No rows affected.");
+							throw new Exception("Failed to insert user role.");
+						}
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
-				throw new Exception("Error adding user role.", ex);
+				Debug.WriteLine($"AddUserRole: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception($"Error adding user role: {ex.Message}", ex);
 			}
 		}
 
 		public void UpdateUserRole(UserRole userRole)
 		{
+			if (userRole == null || string.IsNullOrWhiteSpace(userRole.Id) || string.IsNullOrWhiteSpace(userRole.IdStudent) || string.IsNullOrWhiteSpace(userRole.IdRole))
+			{
+				Debug.WriteLine($"UpdateUserRole: Invalid UserRole (Id='{userRole?.Id}', IdStudent='{userRole?.IdStudent}', IdRole='{userRole?.IdRole}')");
+				throw new ArgumentException("UserRole data is invalid.");
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -686,18 +1129,31 @@ namespace StudentManagementSystem
 						cmd.Parameters.AddWithValue("@Id", userRole.Id);
 						cmd.Parameters.AddWithValue("@IdStudent", userRole.IdStudent);
 						cmd.Parameters.AddWithValue("@IdRole", userRole.IdRole);
-						cmd.ExecuteNonQuery();
+						Debug.WriteLine($"UpdateUserRole: Updating Id={userRole.Id}, IdStudent={userRole.IdStudent}, IdRole={userRole.IdRole}");
+						int rowsAffected = cmd.ExecuteNonQuery();
+						if (rowsAffected == 0)
+						{
+							Debug.WriteLine($"UpdateUserRole: No rows affected for Id={userRole.Id}");
+							throw new Exception("Failed to update user role. No matching record found.");
+						}
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
-				throw new Exception("Error updating user role.", ex);
+				Debug.WriteLine($"UpdateUserRole: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception($"Error updating user role: {ex.Message}", ex);
 			}
 		}
 
 		public void DeleteUserRole(string id)
 		{
+			if (string.IsNullOrWhiteSpace(id))
+			{
+				Debug.WriteLine("DeleteUserRole: Invalid Id.");
+				throw new ArgumentException("UserRole ID is invalid.");
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -706,20 +1162,34 @@ namespace StudentManagementSystem
 					using (SqlCommand cmd = new SqlCommand(query, conn))
 					{
 						cmd.Parameters.AddWithValue("@Id", id);
+						Debug.WriteLine($"DeleteUserRole: Deleting Id={id}");
 						cmd.ExecuteNonQuery();
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"DeleteUserRole: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error deleting user role.", ex);
 			}
 		}
 
 		public List<Subject> GetAvailableSubjects(string username)
 		{
+			if (string.IsNullOrWhiteSpace(username))
+			{
+				Debug.WriteLine("GetAvailableSubjects: Invalid username.");
+				return new List<Subject>();
+			}
+
 			List<Subject> subjects = new List<Subject>();
 			string studentId = GetStudentIdByUsername(username);
+			if (string.IsNullOrWhiteSpace(studentId))
+			{
+				Debug.WriteLine($"GetAvailableSubjects: No IdStudent found for Username={username}");
+				return subjects;
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -748,17 +1218,31 @@ namespace StudentManagementSystem
 						}
 					}
 				}
+				Debug.WriteLine($"GetAvailableSubjects: Found {subjects.Count} available subjects for IdStudent={studentId}");
 				return subjects;
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"GetAvailableSubjects: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error retrieving available subjects.", ex);
 			}
 		}
 
 		public void EnrollSubject(string username, string subjectId)
 		{
+			if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(subjectId))
+			{
+				Debug.WriteLine($"EnrollSubject: Invalid input (Username='{username}', SubjectId='{subjectId}')");
+				throw new ArgumentException("Username or Subject ID is invalid.");
+			}
+
 			string studentId = GetStudentIdByUsername(username);
+			if (string.IsNullOrWhiteSpace(studentId))
+			{
+				Debug.WriteLine($"EnrollSubject: No IdStudent found for Username={username}");
+				throw new Exception("Student ID not found for the given username.");
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -768,20 +1252,34 @@ namespace StudentManagementSystem
 					{
 						cmd.Parameters.AddWithValue("@IdStudent", studentId);
 						cmd.Parameters.AddWithValue("@IdSubject", subjectId);
+						Debug.WriteLine($"EnrollSubject: Inserting IdStudent={studentId}, IdSubject={subjectId}");
 						cmd.ExecuteNonQuery();
 					}
 				}
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"EnrollSubject: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error enrolling subject.", ex);
 			}
 		}
 
 		public List<Enrol> GetEnrolledSubjects(string username)
 		{
+			if (string.IsNullOrWhiteSpace(username))
+			{
+				Debug.WriteLine("GetEnrolledSubjects: Invalid username.");
+				return new List<Enrol>();
+			}
+
 			List<Enrol> enrolledSubjects = new List<Enrol>();
 			string studentId = GetStudentIdByUsername(username);
+			if (string.IsNullOrWhiteSpace(studentId))
+			{
+				Debug.WriteLine($"GetEnrolledSubjects: No IdStudent found for Username={username}");
+				return enrolledSubjects;
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -809,10 +1307,12 @@ namespace StudentManagementSystem
 						}
 					}
 				}
+				Debug.WriteLine($"GetEnrolledSubjects: Found {enrolledSubjects.Count} enrolled subjects for IdStudent={studentId}");
 				return enrolledSubjects;
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"GetEnrolledSubjects: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error retrieving enrolled subjects.", ex);
 			}
 		}
@@ -825,9 +1325,10 @@ namespace StudentManagementSystem
 				using (SqlConnection conn = GetConnection())
 				{
 					string query = @"
-                        SELECT e.IdStudent, e.IdSubject, s.Name, e.Mark
+                        SELECT e.IdStudent, e.IdSubject, s.Name AS SubjectName, st.Name AS StudentName, e.Mark
                         FROM [Enrol] e
-                        JOIN [Subject] s ON e.IdSubject = s.Id";
+                        JOIN [Subject] s ON e.IdSubject = s.Id
+                        JOIN [Student] st ON e.IdStudent = st.Id";
 					using (SqlCommand cmd = new SqlCommand(query, conn))
 					{
 						using (SqlDataReader reader = cmd.ExecuteReader())
@@ -838,37 +1339,46 @@ namespace StudentManagementSystem
 								{
 									IdStudent = reader.GetString(reader.GetOrdinal("IdStudent")),
 									IdSubject = reader.GetString(reader.GetOrdinal("IdSubject")),
-									Name = reader.GetString(reader.GetOrdinal("Name")),
+									Name = reader.GetString(reader.GetOrdinal("SubjectName")),
+									StudentName = reader.GetString(reader.GetOrdinal("StudentName")),
 									Mark = reader.IsDBNull(reader.GetOrdinal("Mark")) ? null : reader.GetDecimal(reader.GetOrdinal("Mark"))
 								});
 							}
 						}
 					}
 				}
+				Debug.WriteLine($"GetAllEnrollments: Found {enrollments.Count} enrollments.");
 				return enrollments;
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"GetAllEnrollments: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error retrieving all enrollments.", ex);
 			}
 		}
 
-		public List<StudentGrade> SearchStudentGrades(string studentId)
+		public List<StudentGrade> SearchStudentGrades(string searchValue)
 		{
+			if (string.IsNullOrWhiteSpace(searchValue))
+			{
+				Debug.WriteLine("SearchStudentGrades: Invalid searchValue.");
+				return new List<StudentGrade>();
+			}
+
 			List<StudentGrade> grades = new List<StudentGrade>();
 			try
 			{
 				using (SqlConnection conn = GetConnection())
 				{
 					string query = @"
-                        SELECT s.Name AS StudentName, sub.Name AS SubjectName, e.Mark
+                        SELECT s.Id, s.Name AS StudentName, sub.Name AS SubjectName, e.Mark
                         FROM [Student] s
                         LEFT JOIN [Enrol] e ON s.Id = e.IdStudent
                         LEFT JOIN [Subject] sub ON e.IdSubject = sub.Id
-                        WHERE s.Id = @StudentId";
+                        WHERE s.Name LIKE '%' + @SearchValue + '%' OR s.Id = @SearchValue";
 					using (SqlCommand cmd = new SqlCommand(query, conn))
 					{
-						cmd.Parameters.AddWithValue("@StudentId", studentId);
+						cmd.Parameters.AddWithValue("@SearchValue", searchValue);
 						using (SqlDataReader reader = cmd.ExecuteReader())
 						{
 							while (reader.Read())
@@ -883,10 +1393,12 @@ namespace StudentManagementSystem
 						}
 					}
 				}
+				Debug.WriteLine($"SearchStudentGrades: Found {grades.Count} grades for SearchValue='{searchValue}'");
 				return grades;
 			}
 			catch (SqlException ex)
 			{
+				Debug.WriteLine($"SearchStudentGrades: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
 				throw new Exception("Error searching student grades.", ex);
 			}
 		}

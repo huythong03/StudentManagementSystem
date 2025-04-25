@@ -1,56 +1,63 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
+using System.Windows.Controls;
+using StudentManagementSystem.Models;
 
 namespace StudentManagementSystem.Views
 {
-	public partial class UpdateAccountForm : Window
+	public partial class UpdateAccountForm : UserControl
 	{
 		private readonly DataAccess dataAccess;
-		private string username;
+		private readonly User currentUser;
 
-		public UpdateAccountForm(string username)
+		public UpdateAccountForm(User user)
 		{
 			InitializeComponent();
-			this.username = username;
 			dataAccess = new DataAccess();
-			txtCurrentUsername.Text = username;
+			currentUser = user;
+			LoadUserData();
 		}
 
-		private void Save_Click(object sender, RoutedEventArgs e)
+		private void LoadUserData()
 		{
-			if (string.IsNullOrWhiteSpace(txtNewUsername.Text) && string.IsNullOrWhiteSpace(txtNewPassword.Password))
+			if (currentUser != null)
 			{
-				MessageBox.Show("Please provide a new username or password.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+				txtUsername.Text = currentUser.Username;
+				txtPassword.Password = currentUser.Password;
+				txtNote.Text = currentUser.Note;
+				chkStatus.IsChecked = currentUser.Status;
+			}
+		}
+
+		private void SaveAccount_Click(object sender, RoutedEventArgs e)
+		{
+			if (string.IsNullOrWhiteSpace(txtUsername.Text) || string.IsNullOrWhiteSpace(txtPassword.Password))
+			{
+				MessageBox.Show("Please fill in all required fields.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
 				return;
 			}
 
 			try
 			{
-				var user = dataAccess.GetUsers().Find(u => u.Username == username);
-				if (user == null)
+				var updatedUser = new User
 				{
-					MessageBox.Show("User not found.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-					return;
-				}
+					IdStudent = currentUser.IdStudent,
+					Username = txtUsername.Text,
+					Password = txtPassword.Password,
+					Note = txtNote.Text,
+					Status = chkStatus.IsChecked ?? false,
+					CreatedAt = currentUser.CreatedAt,
+					ModifiedAt = DateTime.Now
+				};
 
-				bool usernameChanged = !string.IsNullOrWhiteSpace(txtNewUsername.Text) && txtNewUsername.Text != username;
-				bool passwordChanged = !string.IsNullOrWhiteSpace(txtNewPassword.Password);
+				dataAccess.UpdateUser(updatedUser);
+				MessageBox.Show("Account updated successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
 
-				if (usernameChanged)
+				// Notify UserDashboard to switch back to previous view
+				if (this.Parent is ContentControl contentControl)
 				{
-					user.Username = txtNewUsername.Text;
-					user.ModifiedAt = DateTime.Now;
-					dataAccess.UpdateUser(user);
-					username = txtNewUsername.Text;
-					txtCurrentUsername.Text = username;
+					contentControl.Content = null; // Or switch to another view
 				}
-
-				if (passwordChanged)
-				{
-					dataAccess.UpdateUserPassword(username, txtNewPassword.Password);
-				}
-
-				DialogResult = true;
-				Close();
 			}
 			catch (Exception ex)
 			{
@@ -60,8 +67,11 @@ namespace StudentManagementSystem.Views
 
 		private void Cancel_Click(object sender, RoutedEventArgs e)
 		{
-			DialogResult = false;
-			Close();
+			// Notify UserDashboard to switch back to previous view
+			if (this.Parent is ContentControl contentControl)
+			{
+				contentControl.Content = null; // Or switch to another view
+			}
 		}
 	}
 }

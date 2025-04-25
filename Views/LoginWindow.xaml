@@ -4,6 +4,7 @@
         Title="Login - Student Management System"
         Height="350"
         Width="400"
+        WindowStyle="None"
         WindowStartupLocation="CenterScreen"
         Background="#F5F7FA">
     <Window.Resources>
@@ -30,6 +31,36 @@
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter Property="Background" Value="#2C6499"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Exit Button Style -->
+        <Style x:Key="ExitButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#C0392B"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="5"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#A93226"/>
+                                <Setter Property="Cursor" Value="Hand"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#922B21"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -130,13 +161,20 @@
                 <PasswordBox x:Name="txtPassword" Width="250"/>
             </StackPanel>
 
-            <!-- Login Button -->
-            <Button Grid.Row="3"
-                    Content="Login"
-                    Width="120"
-                    Style="{StaticResource LoginButtonStyle}"
-                    Click="Login_Click"
-                    HorizontalAlignment="Center"/>
+            <!-- Buttons -->
+            <StackPanel Grid.Row="3" 
+                        Orientation="Horizontal" 
+                        HorizontalAlignment="Center">
+                <Button Content="Login"
+                        Width="120"
+                        Style="{StaticResource LoginButtonStyle}"
+                        Click="Login_Click"
+                        Margin="0,0,10,0"/>
+                <Button Content="Exit"
+                        Width="120"
+                        Style="{StaticResource ExitButtonStyle}"
+                        Click="Exit_Click"/>
+            </StackPanel>
         </Grid>
     </Border>
 </Window>

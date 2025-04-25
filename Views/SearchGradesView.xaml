@@ -86,7 +86,7 @@
 
             <!-- Search Input -->
             <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,15">
-                <TextBlock Text="Student ID"
+                <TextBlock Text="Student Name"
                            FontSize="14"
                            Foreground="#2C3E50"
                            Margin="0,0,10,0"
