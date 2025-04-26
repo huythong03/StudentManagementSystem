@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Configuration; // Để lấy chuỗi kết nối từ App.config
-using System.Data.SqlClient; // Sử dụng SQL Server
+using System.Configuration;
+using System.Data.SqlClient;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
@@ -18,18 +18,14 @@ namespace StudentManagementSystem.Views
 		{
 			InitializeComponent();
 			currentUser = user;
-			// Lấy tên sinh viên từ bảng Student dựa trên Id (currentUser.Username thực chất là Id)
 			string studentName = GetStudentNameById(currentUser.Username);
-			// Hiển thị lời chào với Name
 			GreetingTextBlock.Text = $"Hello {studentName ?? currentUser.Username}";
-			// Khởi tạo múi giờ Việt Nam (UTC+7)
 			try
 			{
 				vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
 			}
 			catch (TimeZoneNotFoundException)
 			{
-				// Nếu không tìm thấy múi giờ, sử dụng UTC+7 thủ công
 				vietnamTimeZone = TimeZoneInfo.CreateCustomTimeZone("Vietnam Time", TimeSpan.FromHours(7), "Vietnam Time", "Vietnam Time");
 			}
 			SetupTimer();
@@ -38,7 +34,6 @@ namespace StudentManagementSystem.Views
 		private string GetStudentNameById(string studentId)
 		{
 			string studentName = null;
-			// Lấy chuỗi kết nối từ App.config
 			string connectionString = ConfigurationManager.ConnectionStrings["QuanLySinhVienConnection"].ConnectionString;
 			try
 			{
@@ -67,10 +62,10 @@ namespace StudentManagementSystem.Views
 		private void SetupTimer()
 		{
 			timer = new DispatcherTimer();
-			timer.Interval = TimeSpan.FromSeconds(1); // Cập nhật mỗi giây
+			timer.Interval = TimeSpan.FromSeconds(1);
 			timer.Tick += Timer_Tick;
 			timer.Start();
-			UpdateDateTime(); // Cập nhật ngay khi khởi tạo
+			UpdateDateTime();
 		}
 
 		private void Timer_Tick(object sender, EventArgs e)
@@ -80,7 +75,6 @@ namespace StudentManagementSystem.Views
 
 		private void UpdateDateTime()
 		{
-			// Chuyển thời gian hiện tại sang múi giờ Việt Nam
 			DateTime vietnamTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamTimeZone);
 			DateTextBlock.Text = vietnamTime.ToString("dd/MM/yyyy");
 			TimeTextBlock.Text = vietnamTime.ToString("HH:mm:ss");
@@ -88,7 +82,7 @@ namespace StudentManagementSystem.Views
 
 		private void Exit_Click(object sender, RoutedEventArgs e)
 		{
-			timer.Stop(); // Dừng timer khi thoát
+			timer.Stop();
 			Application.Current.Shutdown();
 		}
 
@@ -124,7 +118,7 @@ namespace StudentManagementSystem.Views
 
 		private void Logout_Click(object sender, RoutedEventArgs e)
 		{
-			timer.Stop(); // Dừng timer khi logout
+			timer.Stop();
 			var loginWindow = new LoginWindow();
 			loginWindow.Show();
 			Close();

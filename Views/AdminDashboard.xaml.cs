@@ -31,7 +31,7 @@ namespace StudentManagementSystem.Views
 			timer.Interval = TimeSpan.FromSeconds(1);
 			timer.Tick += Timer_Tick;
 			timer.Start();
-			UpdateDateTime(); 
+			UpdateDateTime();
 		}
 
 		private void Timer_Tick(object sender, EventArgs e)
@@ -45,6 +45,7 @@ namespace StudentManagementSystem.Views
 			DateTextBlock.Text = vietnamTime.ToString("dd/MM/yyyy");
 			TimeTextBlock.Text = vietnamTime.ToString("HH:mm:ss");
 		}
+
 
 		private void Exit_Click(object sender, RoutedEventArgs e)
 		{
