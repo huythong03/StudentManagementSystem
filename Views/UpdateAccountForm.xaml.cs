@@ -25,7 +25,6 @@ namespace StudentManagementSystem.Views
 				txtUsername.Text = currentUser.Username;
 				txtPassword.Password = currentUser.Password;
 				txtNote.Text = currentUser.Note;
-				chkStatus.IsChecked = currentUser.Status;
 			}
 		}
 
@@ -45,7 +44,6 @@ namespace StudentManagementSystem.Views
 					Username = txtUsername.Text,
 					Password = txtPassword.Password,
 					Note = txtNote.Text,
-					Status = chkStatus.IsChecked ?? false,
 					CreatedAt = currentUser.CreatedAt,
 					ModifiedAt = DateTime.Now
 				};
@@ -53,10 +51,9 @@ namespace StudentManagementSystem.Views
 				dataAccess.UpdateUser(updatedUser);
 				MessageBox.Show("Account updated successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
 
-				// Notify UserDashboard to switch back to previous view
 				if (this.Parent is ContentControl contentControl)
 				{
-					contentControl.Content = null; // Or switch to another view
+					contentControl.Content = null;
 				}
 			}
 			catch (Exception ex)
@@ -67,10 +64,9 @@ namespace StudentManagementSystem.Views
 
 		private void Cancel_Click(object sender, RoutedEventArgs e)
 		{
-			// Notify UserDashboard to switch back to previous view
 			if (this.Parent is ContentControl contentControl)
 			{
-				contentControl.Content = null; // Or switch to another view
+				contentControl.Content = null;
 			}
 		}
 	}

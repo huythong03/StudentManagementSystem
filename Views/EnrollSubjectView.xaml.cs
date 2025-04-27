@@ -28,15 +28,16 @@ namespace StudentManagementSystem.Views
 			}
 		}
 
-		private void Enroll_Click(object sender, RoutedEventArgs e)
+		private void RequestEnrollment_Click(object sender, RoutedEventArgs e)
 		{
 			if (SubjectsGrid.SelectedItem is Subject selectedSubject)
 			{
 				try
 				{
-					dataAccess.EnrollSubject(username, selectedSubject.Id);
+					int requestId = dataAccess.CreateEnrollRequest(username, selectedSubject.Id);
+					MessageBox.Show("Enrollment request submitted successfully. Waiting for admin approval.",
+								  "Success", MessageBoxButton.OK, MessageBoxImage.Information);
 					LoadSubjects();
-					MessageBox.Show("Subject enrolled successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
 				}
 				catch (Exception ex)
 				{

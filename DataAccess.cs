@@ -1450,5 +1450,326 @@ namespace StudentManagementSystem
 				throw new Exception("Error searching student grades.", ex);
 			}
 		}
+
+		public List<EnrollRequest> GetPendingEnrollRequests()
+		{
+			List<EnrollRequest> requests = new List<EnrollRequest>();
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = @"
+                SELECT er.RequestId, er.IdStudent, s.Name AS StudentName, 
+                       er.IdSubject, sub.Name AS SubjectName, er.RequestDate, er.Status
+                FROM [EnrollRequests] er
+                JOIN [Student] s ON er.IdStudent = s.Id
+                JOIN [Subject] sub ON er.IdSubject = sub.Id
+                WHERE er.Status = 'Pending'
+                ORDER BY er.RequestDate";
+
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						using (SqlDataReader reader = cmd.ExecuteReader())
+						{
+							while (reader.Read())
+							{
+								requests.Add(new EnrollRequest
+								{
+									RequestId = reader.GetInt32(reader.GetOrdinal("RequestId")),
+									IdStudent = reader.GetString(reader.GetOrdinal("IdStudent")),
+									StudentName = reader.GetString(reader.GetOrdinal("StudentName")),
+									IdSubject = reader.GetString(reader.GetOrdinal("IdSubject")),
+									SubjectName = reader.GetString(reader.GetOrdinal("SubjectName")),
+									RequestDate = reader.GetDateTime(reader.GetOrdinal("RequestDate")),
+									Status = reader.GetString(reader.GetOrdinal("Status"))
+								});
+							}
+						}
+					}
+				}
+				Debug.WriteLine($"GetPendingEnrollRequests: Found {requests.Count} pending requests.");
+				return requests;
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"GetPendingEnrollRequests: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error retrieving pending enroll requests.", ex);
+			}
+		}
+
+		public List<EnrollRequest> GetUserEnrollRequests(string username)
+		{
+			List<EnrollRequest> requests = new List<EnrollRequest>();
+			string studentId = GetStudentIdByUsername(username);
+
+			if (string.IsNullOrWhiteSpace(studentId))
+			{
+				Debug.WriteLine($"GetUserEnrollRequests: No IdStudent found for Username={username}");
+				return requests;
+			}
+
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = @"
+                SELECT er.RequestId, er.IdStudent, s.Name AS StudentName, 
+                       er.IdSubject, sub.Name AS SubjectName, er.RequestDate, er.Status
+                FROM [EnrollRequests] er
+                JOIN [Student] s ON er.IdStudent = s.Id
+                JOIN [Subject] sub ON er.IdSubject = sub.Id
+                WHERE er.IdStudent = @IdStudent
+                ORDER BY er.RequestDate DESC";
+
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						cmd.Parameters.AddWithValue("@IdStudent", studentId);
+						using (SqlDataReader reader = cmd.ExecuteReader())
+						{
+							while (reader.Read())
+							{
+								requests.Add(new EnrollRequest
+								{
+									RequestId = reader.GetInt32(reader.GetOrdinal("RequestId")),
+									IdStudent = reader.GetString(reader.GetOrdinal("IdStudent")),
+									StudentName = reader.GetString(reader.GetOrdinal("StudentName")),
+									IdSubject = reader.GetString(reader.GetOrdinal("IdSubject")),
+									SubjectName = reader.GetString(reader.GetOrdinal("SubjectName")),
+									RequestDate = reader.GetDateTime(reader.GetOrdinal("RequestDate")),
+									Status = reader.GetString(reader.GetOrdinal("Status"))
+								});
+							}
+						}
+					}
+				}
+				Debug.WriteLine($"GetUserEnrollRequests: Found {requests.Count} requests for IdStudent={studentId}");
+				return requests;
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"GetUserEnrollRequests: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error retrieving user enroll requests.", ex);
+			}
+		}
+
+		public int CreateEnrollRequest(string username, string subjectId)
+		{
+			if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(subjectId))
+			{
+				Debug.WriteLine($"CreateEnrollRequest: Invalid input (Username='{username}', SubjectId='{subjectId}')");
+				throw new ArgumentException("Username or Subject ID is invalid.");
+			}
+
+			string studentId = GetStudentIdByUsername(username);
+			if (string.IsNullOrWhiteSpace(studentId))
+			{
+				Debug.WriteLine($"CreateEnrollRequest: No IdStudent found for Username={username}");
+				throw new Exception("Student ID not found for the given username.");
+			}
+
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					// Kiểm tra xem yêu cầu đã tồn tại chưa
+					string checkQuery = "SELECT COUNT(*) FROM [EnrollRequests] WHERE IdStudent = @IdStudent AND IdSubject = @IdSubject AND Status = 'Pending'";
+					using (SqlCommand checkCmd = new SqlCommand(checkQuery, conn))
+					{
+						checkCmd.Parameters.AddWithValue("@IdStudent", studentId);
+						checkCmd.Parameters.AddWithValue("@IdSubject", subjectId);
+						int existingCount = (int)checkCmd.ExecuteScalar();
+
+						if (existingCount > 0)
+						{
+							Debug.WriteLine($"CreateEnrollRequest: Request already exists for IdStudent={studentId}, IdSubject={subjectId}");
+							throw new Exception("You already have a pending request for this subject.");
+						}
+					}
+
+					// Tạo yêu cầu mới
+					string insertQuery = @"
+                INSERT INTO [EnrollRequests] (IdStudent, IdSubject, Status)
+                VALUES (@IdStudent, @IdSubject, 'Pending');
+                SELECT SCOPE_IDENTITY();";
+
+					using (SqlCommand cmd = new SqlCommand(insertQuery, conn))
+					{
+						cmd.Parameters.AddWithValue("@IdStudent", studentId);
+						cmd.Parameters.AddWithValue("@IdSubject", subjectId);
+
+						int requestId = Convert.ToInt32(cmd.ExecuteScalar());
+						Debug.WriteLine($"CreateEnrollRequest: Created request with ID={requestId} for IdStudent={studentId}, IdSubject={subjectId}");
+						return requestId;
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"CreateEnrollRequest: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error creating enroll request.", ex);
+			}
+		}
+
+		public bool CancelEnrollRequest(int requestId, string username)
+		{
+			if (requestId <= 0 || string.IsNullOrWhiteSpace(username))
+			{
+				Debug.WriteLine($"CancelEnrollRequest: Invalid input (RequestId={requestId}, Username='{username}')");
+				return false;
+			}
+
+			string studentId = GetStudentIdByUsername(username);
+			if (string.IsNullOrWhiteSpace(studentId))
+			{
+				Debug.WriteLine($"CancelEnrollRequest: No IdStudent found for Username={username}");
+				return false;
+			}
+
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = @"
+                DELETE FROM [EnrollRequests] 
+                WHERE RequestId = @RequestId 
+                AND IdStudent = @IdStudent 
+                AND Status = 'Pending'";
+
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						cmd.Parameters.AddWithValue("@RequestId", requestId);
+						cmd.Parameters.AddWithValue("@IdStudent", studentId);
+
+						int rowsAffected = cmd.ExecuteNonQuery();
+						bool success = rowsAffected > 0;
+						Debug.WriteLine($"CancelEnrollRequest: RequestId={requestId}, Success={success}");
+						return success;
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"CancelEnrollRequest: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error canceling enroll request.", ex);
+			}
+		}
+
+		public bool ApproveEnrollRequest(int requestId)
+		{
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					// Bắt đầu transaction
+					using (SqlTransaction transaction = conn.BeginTransaction())
+					{
+						try
+						{
+							// Lấy thông tin yêu cầu
+							string getRequestQuery = @"
+                        SELECT IdStudent, IdSubject 
+                        FROM [EnrollRequests] 
+                        WHERE RequestId = @RequestId 
+                        AND Status = 'Pending'";
+
+							string studentId = null;
+							string subjectId = null;
+
+							using (SqlCommand getCmd = new SqlCommand(getRequestQuery, conn, transaction))
+							{
+								getCmd.Parameters.AddWithValue("@RequestId", requestId);
+								using (SqlDataReader reader = getCmd.ExecuteReader())
+								{
+									if (reader.Read())
+									{
+										studentId = reader.GetString(reader.GetOrdinal("IdStudent"));
+										subjectId = reader.GetString(reader.GetOrdinal("IdSubject"));
+									}
+								}
+							}
+
+							if (string.IsNullOrWhiteSpace(studentId) || string.IsNullOrWhiteSpace(subjectId))
+							{
+								Debug.WriteLine($"ApproveEnrollRequest: Request not found or already processed (RequestId={requestId})");
+								transaction.Rollback();
+								return false;
+							}
+
+							// Kiểm tra xem sinh viên đã đăng ký môn này chưa
+							string checkEnrolQuery = "SELECT COUNT(*) FROM [Enrol] WHERE IdStudent = @IdStudent AND IdSubject = @IdSubject";
+							using (SqlCommand checkCmd = new SqlCommand(checkEnrolQuery, conn, transaction))
+							{
+								checkCmd.Parameters.AddWithValue("@IdStudent", studentId);
+								checkCmd.Parameters.AddWithValue("@IdSubject", subjectId);
+								int count = (int)checkCmd.ExecuteScalar();
+
+								if (count > 0)
+								{
+									Debug.WriteLine($"ApproveEnrollRequest: Student already enrolled (IdStudent={studentId}, IdSubject={subjectId})");
+									transaction.Rollback();
+									return false;
+								}
+							}
+
+							// Thêm vào bảng Enrol
+							string insertEnrolQuery = "INSERT INTO [Enrol] (IdStudent, IdSubject) VALUES (@IdStudent, @IdSubject)";
+							using (SqlCommand insertCmd = new SqlCommand(insertEnrolQuery, conn, transaction))
+							{
+								insertCmd.Parameters.AddWithValue("@IdStudent", studentId);
+								insertCmd.Parameters.AddWithValue("@IdSubject", subjectId);
+								insertCmd.ExecuteNonQuery();
+							}
+
+							// Cập nhật trạng thái yêu cầu
+							string updateRequestQuery = "UPDATE [EnrollRequests] SET Status = 'Approved' WHERE RequestId = @RequestId";
+							using (SqlCommand updateCmd = new SqlCommand(updateRequestQuery, conn, transaction))
+							{
+								updateCmd.Parameters.AddWithValue("@RequestId", requestId);
+								updateCmd.ExecuteNonQuery();
+							}
+
+							// Commit transaction
+							transaction.Commit();
+							Debug.WriteLine($"ApproveEnrollRequest: Approved request (RequestId={requestId})");
+							return true;
+						}
+						catch
+						{
+							transaction.Rollback();
+							throw;
+						}
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"ApproveEnrollRequest: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error approving enroll request.", ex);
+			}
+		}
+
+		public bool RejectEnrollRequest(int requestId)
+		{
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = "UPDATE [EnrollRequests] SET Status = 'Rejected' WHERE RequestId = @RequestId AND Status = 'Pending'";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						cmd.Parameters.AddWithValue("@RequestId", requestId);
+						int rowsAffected = cmd.ExecuteNonQuery();
+						bool success = rowsAffected > 0;
+						Debug.WriteLine($"RejectEnrollRequest: RequestId={requestId}, Success={success}");
+						return success;
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"RejectEnrollRequest: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error rejecting enroll request.", ex);
+			}
+		}
 	}
 }

@@ -127,6 +127,11 @@ namespace StudentManagementSystem.Views
 			MainContent.Content = new SearchGradesView();
 		}
 
+		private void ManageEnrollRequests_Click(object sender, RoutedEventArgs e)
+		{
+			MainContent.Content = new AdminEnrollRequestsView();
+		}
+
 		private void Logout_Click(object sender, RoutedEventArgs e)
 		{
 			timer?.Stop();

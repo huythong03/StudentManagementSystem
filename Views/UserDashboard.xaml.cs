@@ -116,6 +116,11 @@ namespace StudentManagementSystem.Views
 			MainContent.Content = new UpdateAccountForm(currentUser);
 		}
 
+		private void ViewEnrollRequests_Click(object sender, RoutedEventArgs e)
+		{
+			MainContent.Content = new UserEnrollRequestsView(currentUser.Username);
+		}
+
 		private void Logout_Click(object sender, RoutedEventArgs e)
 		{
 			timer.Stop();
