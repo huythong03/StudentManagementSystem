@@ -10,10 +10,15 @@ namespace StudentManagementSystem.Views
 	{
 		private DispatcherTimer timer;
 		private TimeZoneInfo vietnamTimeZone;
+		private readonly DataAccess dataAccess;
+		private readonly UIElement dashboardContent;
 
 		public AdminDashboard()
 		{
 			InitializeComponent();
+			dataAccess = new DataAccess();
+			// Lưu nội dung Dashboard Overview
+			dashboardContent = MainContent.Content as UIElement;
 			try
 			{
 				vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
@@ -23,12 +28,15 @@ namespace StudentManagementSystem.Views
 				vietnamTimeZone = TimeZoneInfo.CreateCustomTimeZone("Vietnam Time", TimeSpan.FromHours(7), "Vietnam Time", "Vietnam Time");
 			}
 			SetupTimer();
+			UpdateDashboard();
 		}
 
 		private void SetupTimer()
 		{
-			timer = new DispatcherTimer();
-			timer.Interval = TimeSpan.FromSeconds(1);
+			timer = new DispatcherTimer
+			{
+				Interval = TimeSpan.FromSeconds(1)
+			};
 			timer.Tick += Timer_Tick;
 			timer.Start();
 			UpdateDateTime();
@@ -46,10 +54,36 @@ namespace StudentManagementSystem.Views
 			TimeTextBlock.Text = vietnamTime.ToString("HH:mm:ss");
 		}
 
+		private void UpdateDashboard()
+		{
+			try
+			{
+				if (dataAccess == null)
+				{
+					System.Diagnostics.Debug.WriteLine("UpdateDashboard: dataAccess is null");
+					throw new Exception("DataAccess is not initialized.");
+				}
+				int totalStudents = dataAccess.GetTotalStudents();
+				TotalStudentsTextBlock.Text = totalStudents.ToString("N0");
+				System.Diagnostics.Debug.WriteLine($"UpdateDashboard: Set TotalStudentsTextBlock to {totalStudents}");
+			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Debug.WriteLine($"UpdateDashboard: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				MessageBox.Show($"Error loading total students: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+				TotalStudentsTextBlock.Text = "0";
+			}
+		}
+
+		private void Home_Click(object sender, RoutedEventArgs e)
+		{
+			MainContent.Content = dashboardContent;
+			UpdateDashboard();
+		}
 
 		private void Exit_Click(object sender, RoutedEventArgs e)
 		{
-			timer.Stop();
+			timer?.Stop();
 			Application.Current.Shutdown();
 		}
 
@@ -95,10 +129,10 @@ namespace StudentManagementSystem.Views
 
 		private void Logout_Click(object sender, RoutedEventArgs e)
 		{
-			timer.Stop();
+			timer?.Stop();
 			LoginWindow loginWindow = new LoginWindow();
 			loginWindow.Show();
-			this.Close();
+			Close();
 		}
 	}
 }

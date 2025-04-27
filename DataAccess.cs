@@ -33,6 +33,28 @@ namespace StudentManagementSystem
 			}
 		}
 
+		public int GetTotalStudents()
+		{
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = "SELECT dbo.GetTotalStudents()";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						int total = (int)cmd.ExecuteScalar();
+						Debug.WriteLine($"GetTotalStudents: Total students = {total}");
+						return total;
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"GetTotalStudents: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error retrieving total students.", ex);
+			}
+		}
+
 		public string GetNextRoleId()
 		{
 			try
@@ -397,6 +419,19 @@ namespace StudentManagementSystem
 				throw new ArgumentException("Student data is invalid.");
 			}
 
+			DateTime today = DateTime.Today;
+			int age = today.Year - student.BOF.Year;
+			if (today < student.BOF.AddYears(age))
+			{
+				age--;
+			}
+
+			if (age < 15)
+			{
+				Debug.WriteLine($"AddStudent: Student is too young (Id='{student.Id}', Age={age})");
+				throw new ArgumentException("Student must be at least 15 years old.");
+			}
+
 			try
 			{
 				using (SqlConnection conn = GetConnection())
@@ -429,6 +464,19 @@ namespace StudentManagementSystem
 			{
 				Debug.WriteLine($"UpdateStudent: Invalid student data (Id='{student?.Id}', Name='{student?.Name}')");
 				throw new ArgumentException("Student data is invalid.");
+			}
+
+			DateTime today = DateTime.Today;
+			int age = today.Year - student.BOF.Year;
+			if (today < student.BOF.AddYears(age))
+			{
+				age--;
+			}
+
+			if (age < 15)
+			{
+				Debug.WriteLine($"AddStudent: Student is too young (Id='{student.Id}', Age={age})");
+				throw new ArgumentException("Student must be at least 15 years old.");
 			}
 
 			try
