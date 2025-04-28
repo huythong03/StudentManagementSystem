@@ -542,7 +542,7 @@
                                                        Margin="10,0,0,0"
                                                        VerticalAlignment="Center"/>
                                         </StackPanel>
-                                        <TextBlock Text="12"
+                                        <TextBlock x:Name="PendingRequestsTextBlock" 
                                                    FontSize="32"
                                                    FontWeight="Bold"
                                                    FontFamily="{StaticResource PrimaryFont}"

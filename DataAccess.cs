@@ -1771,5 +1771,27 @@ namespace StudentManagementSystem
 				throw new Exception("Error rejecting enroll request.", ex);
 			}
 		}
+
+		public int GetPendingEnrollmentRequestsCount()
+		{
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = "SELECT COUNT(*) FROM [EnrollRequests] WHERE Status = 'Pending'";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						int count = (int)cmd.ExecuteScalar();
+						Debug.WriteLine($"GetPendingEnrollmentRequestsCount: Pending requests = {count}");
+						return count;
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"GetPendingEnrollmentRequestsCount: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error retrieving pending enrollment requests count.", ex);
+			}
+		}
 	}
 }

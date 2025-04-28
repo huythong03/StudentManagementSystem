@@ -63,15 +63,23 @@ namespace StudentManagementSystem.Views
 					System.Diagnostics.Debug.WriteLine("UpdateDashboard: dataAccess is null");
 					throw new Exception("DataAccess is not initialized.");
 				}
+
+				// Cập nhật tổng số sinh viên
 				int totalStudents = dataAccess.GetTotalStudents();
 				TotalStudentsTextBlock.Text = totalStudents.ToString("N0");
 				System.Diagnostics.Debug.WriteLine($"UpdateDashboard: Set TotalStudentsTextBlock to {totalStudents}");
+
+				// Cập nhật số yêu cầu đang chờ
+				int pendingRequests = dataAccess.GetPendingEnrollmentRequestsCount();
+				PendingRequestsTextBlock.Text = pendingRequests.ToString("N0");
+				System.Diagnostics.Debug.WriteLine($"UpdateDashboard: Set PendingRequestsTextBlock to {pendingRequests}");
 			}
 			catch (Exception ex)
 			{
 				System.Diagnostics.Debug.WriteLine($"UpdateDashboard: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
-				MessageBox.Show($"Error loading total students: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+				MessageBox.Show($"Error loading dashboard data: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
 				TotalStudentsTextBlock.Text = "0";
+				PendingRequestsTextBlock.Text = "0";
 			}
 		}
 
