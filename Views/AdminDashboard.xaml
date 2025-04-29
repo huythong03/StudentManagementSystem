@@ -285,6 +285,7 @@
                     </StackPanel>
                 </Button>
 
+
                 <!-- Logout and Exit Buttons -->
                 <StackPanel Orientation="Horizontal"
                             Margin="10,20,10,5"
@@ -413,145 +414,55 @@
                                 <Border Style="{StaticResource DashboardCardStyle}">
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
-                                            <materialDesign:PackIcon Kind="ClipboardList"
-                                                                     Foreground="#10B981"
-                                                                     Width="24"
-                                                                     Height="24"
-                                                                     VerticalAlignment="Center"/>
-                                            <TextBlock Text="Total Enrollments"
-                                                       FontSize="16"
-                                                       FontWeight="Medium"
-                                                       FontFamily="{StaticResource PrimaryFont}"
-                                                       Foreground="#1E293B"
-                                                       Margin="10,0,0,0"
-                                                       VerticalAlignment="Center"/>
+                                            <materialDesign:PackIcon Kind="ClipboardList" Foreground="#10B981" Width="24" Height="24" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Total Enrollments" FontSize="16" FontWeight="Medium" FontFamily="{StaticResource PrimaryFont}" Foreground="#1E293B" Margin="10,0,0,0" VerticalAlignment="Center"/>
                                         </StackPanel>
-                                        <TextBlock Text="3,456"
-                                                   FontSize="32"
-                                                   FontWeight="Bold"
-                                                   FontFamily="{StaticResource PrimaryFont}"
-                                                   Foreground="#1E293B"
-                                                   Margin="0,10,0,0"/>
-                                        <TextBlock Text="Current course enrollments"
-                                                   FontSize="12"
-                                                   FontFamily="{StaticResource PrimaryFont}"
-                                                   Foreground="#64748B"/>
+                                        <TextBlock x:Name="TotalEnrollmentsTextBlock" FontSize="32" FontWeight="Bold" FontFamily="{StaticResource PrimaryFont}" Foreground="#1E293B" Margin="0,10,0,0"/>
+                                        <TextBlock Text="Current course enrollments" FontSize="12" FontFamily="{StaticResource PrimaryFont}" Foreground="#64748B"/>
                                     </StackPanel>
                                 </Border>
                                 <!-- Average Grade Card -->
                                 <Border Style="{StaticResource DashboardCardStyle}">
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
-                                            <materialDesign:PackIcon Kind="Star"
-                                                                     Foreground="#F59E0B"
-                                                                     Width="24"
-                                                                     Height="24"
-                                                                     VerticalAlignment="Center"/>
-                                            <TextBlock Text="Average Grade"
-                                                       FontSize="16"
-                                                       FontWeight="Medium"
-                                                       FontFamily="{StaticResource PrimaryFont}"
-                                                       Foreground="#1E293B"
-                                                       Margin="10,0,0,0"
-                                                       VerticalAlignment="Center"/>
+                                            <materialDesign:PackIcon Kind="Star" Foreground="#F59E0B" Width="24" Height="24" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Average Grade" FontSize="16" FontWeight="Medium" FontFamily="{StaticResource PrimaryFont}" Foreground="#1E293B" Margin="10,0,0,0" VerticalAlignment="Center"/>
                                         </StackPanel>
-                                        <TextBlock Text="8.5"
-                                                   FontSize="32"
-                                                   FontWeight="Bold"
-                                                   FontFamily="{StaticResource PrimaryFont}"
-                                                   Foreground="#1E293B"
-                                                   Margin="0,10,0,0"/>
-                                        <TextBlock Text="Average student performance"
-                                                   FontSize="12"
-                                                   FontFamily="{StaticResource PrimaryFont}"
-                                                   Foreground="#64748B"/>
+                                        <TextBlock x:Name="AverageGradeTextBlock" FontSize="32" FontWeight="Bold" FontFamily="{StaticResource PrimaryFont}" Foreground="#1E293B" Margin="0,10,0,0"/>
+                                        <TextBlock Text="Average student performance" FontSize="12" FontFamily="{StaticResource PrimaryFont}" Foreground="#64748B"/>
                                     </StackPanel>
                                 </Border>
                                 <!-- Active Courses Card -->
                                 <Border Style="{StaticResource DashboardCardStyle}">
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
-                                            <materialDesign:PackIcon Kind="BookOpen"
-                                                                     Foreground="#EC4899"
-                                                                     Width="24"
-                                                                     Height="24"
-                                                                     VerticalAlignment="Center"/>
-                                            <TextBlock Text="Active Courses"
-                                                       FontSize="16"
-                                                       FontWeight="Medium"
-                                                       FontFamily="{StaticResource PrimaryFont}"
-                                                       Foreground="#1E293B"
-                                                       Margin="10,0,0,0"
-                                                       VerticalAlignment="Center"/>
+                                            <materialDesign:PackIcon Kind="BookOpen" Foreground="#EC4899" Width="24" Height="24" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Active Courses" FontSize="16" FontWeight="Medium" FontFamily="{StaticResource PrimaryFont}" Foreground="#1E293B" Margin="10,0,0,0" VerticalAlignment="Center"/>
                                         </StackPanel>
-                                        <TextBlock Text="45"
-                                                   FontSize="32"
-                                                   FontWeight="Bold"
-                                                   FontFamily="{StaticResource PrimaryFont}"
-                                                   Foreground="#1E293B"
-                                                   Margin="0,10,0,0"/>
-                                        <TextBlock Text="Currently offered courses"
-                                                   FontSize="12"
-                                                   FontFamily="{StaticResource PrimaryFont}"
-                                                   Foreground="#64748B"/>
+                                        <TextBlock x:Name="ActiveCoursesTextBlock" FontSize="32" FontWeight="Bold" FontFamily="{StaticResource PrimaryFont}" Foreground="#1E293B" Margin="0,10,0,0"/>
+                                        <TextBlock Text="Currently offered courses" FontSize="12" FontFamily="{StaticResource PrimaryFont}" Foreground="#64748B"/>
                                     </StackPanel>
                                 </Border>
                                 <!-- New Students Card -->
                                 <Border Style="{StaticResource DashboardCardStyle}">
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
-                                            <materialDesign:PackIcon Kind="AccountPlus"
-                                                                     Foreground="#3B82F6"
-                                                                     Width="24"
-                                                                     Height="24"
-                                                                     VerticalAlignment="Center"/>
-                                            <TextBlock Text="New Students"
-                                                       FontSize="16"
-                                                       FontWeight="Medium"
-                                                       FontFamily="{StaticResource PrimaryFont}"
-                                                       Foreground="#1E293B"
-                                                       Margin="10,0,0,0"
-                                                       VerticalAlignment="Center"/>
+                                            <materialDesign:PackIcon Kind="AccountPlus" Foreground="#3B82F6" Width="24" Height="24" VerticalAlignment="Center"/>
+                                            <TextBlock Text="New Students" FontSize="16" FontWeight="Medium" FontFamily="{StaticResource PrimaryFont}" Foreground="#1E293B" Margin="10,0,0,0" VerticalAlignment="Center"/>
                                         </StackPanel>
-                                        <TextBlock Text="78"
-                                                   FontSize="32"
-                                                   FontWeight="Bold"
-                                                   FontFamily="{StaticResource PrimaryFont}"
-                                                   Foreground="#1E293B"
-                                                   Margin="0,10,0,0"/>
-                                        <TextBlock Text="Students joined this month"
-                                                   FontSize="12"
-                                                   FontFamily="{StaticResource PrimaryFont}"
-                                                   Foreground="#64748B"/>
+                                        <TextBlock x:Name="NewStudentsTextBlock" FontSize="32" FontWeight="Bold" FontFamily="{StaticResource PrimaryFont}" Foreground="#1E293B" Margin="0,10,0,0"/>
+                                        <TextBlock Text="Students joined this year" FontSize="12" FontFamily="{StaticResource PrimaryFont}" Foreground="#64748B"/>
                                     </StackPanel>
                                 </Border>
                                 <!-- Pending Requests Card -->
                                 <Border Style="{StaticResource DashboardCardStyle}">
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
-                                            <materialDesign:PackIcon Kind="ClockAlert"
-                                                                     Foreground="#EF4444"
-                                                                     Width="24"
-                                                                     Height="24"
-                                                                     VerticalAlignment="Center"/>
-                                            <TextBlock Text="Pending Requests"
-                                                       FontSize="16"
-                                                       FontWeight="Medium"
-                                                       FontFamily="{StaticResource PrimaryFont}"
-                                                       Foreground="#1E293B"
-                                                       Margin="10,0,0,0"
-                                                       VerticalAlignment="Center"/>
+                                            <materialDesign:PackIcon Kind="ClockAlert" Foreground="#EF4444" Width="24" Height="24" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Pending Requests" FontSize="16" FontWeight="Medium" FontFamily="{StaticResource PrimaryFont}" Foreground="#1E293B" Margin="10,0,0,0" VerticalAlignment="Center"/>
                                         </StackPanel>
-                                        <TextBlock x:Name="PendingRequestsTextBlock" 
-                                                   FontSize="32"
-                                                   FontWeight="Bold"
-                                                   FontFamily="{StaticResource PrimaryFont}"
-                                                   Foreground="#1E293B"
-                                                   Margin="0,10,0,0"/>
-                                        <TextBlock Text="Enrollment requests pending"
-                                                   FontSize="12"
-                                                   FontFamily="{StaticResource PrimaryFont}"
-                                                   Foreground="#64748B"/>
+                                        <TextBlock x:Name="PendingRequestsTextBlock" FontSize="32" FontWeight="Bold" FontFamily="{StaticResource PrimaryFont}" Foreground="#1E293B" Margin="0,10,0,0"/>
+                                        <TextBlock Text="Enrollment requests pending" FontSize="12" FontFamily="{StaticResource PrimaryFont}" Foreground="#64748B"/>
                                     </StackPanel>
                                 </Border>
                             </UniformGrid>

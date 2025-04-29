@@ -17,68 +17,41 @@ namespace StudentManagementSystem.Views
 		{
 			InitializeComponent();
 			dataAccess = new DataAccess();
-			// Lưu nội dung Dashboard Overview
-			dashboardContent = MainContent.Content as UIElement;
-			try
-			{
-				vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-			}
-			catch (TimeZoneNotFoundException)
-			{
-				vietnamTimeZone = TimeZoneInfo.CreateCustomTimeZone("Vietnam Time", TimeSpan.FromHours(7), "Vietnam Time", "Vietnam Time");
-			}
-			SetupTimer();
 			UpdateDashboard();
-		}
 
-		private void SetupTimer()
-		{
 			timer = new DispatcherTimer
 			{
 				Interval = TimeSpan.FromSeconds(1)
 			};
 			timer.Tick += Timer_Tick;
 			timer.Start();
-			UpdateDateTime();
 		}
 
 		private void Timer_Tick(object sender, EventArgs e)
 		{
-			UpdateDateTime();
-		}
-
-		private void UpdateDateTime()
-		{
-			DateTime vietnamTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamTimeZone);
-			DateTextBlock.Text = vietnamTime.ToString("dd/MM/yyyy");
-			TimeTextBlock.Text = vietnamTime.ToString("HH:mm:ss");
+			DateTextBlock.Text = DateTime.Now.ToString("dd/MM/yyyy");
+			TimeTextBlock.Text = DateTime.Now.ToString("HH:mm:ss");
 		}
 
 		private void UpdateDashboard()
 		{
 			try
 			{
-				if (dataAccess == null)
-				{
-					System.Diagnostics.Debug.WriteLine("UpdateDashboard: dataAccess is null");
-					throw new Exception("DataAccess is not initialized.");
-				}
-
-				// Cập nhật tổng số sinh viên
-				int totalStudents = dataAccess.GetTotalStudents();
-				TotalStudentsTextBlock.Text = totalStudents.ToString("N0");
-				System.Diagnostics.Debug.WriteLine($"UpdateDashboard: Set TotalStudentsTextBlock to {totalStudents}");
-
-				// Cập nhật số yêu cầu đang chờ
-				int pendingRequests = dataAccess.GetPendingEnrollmentRequestsCount();
-				PendingRequestsTextBlock.Text = pendingRequests.ToString("N0");
-				System.Diagnostics.Debug.WriteLine($"UpdateDashboard: Set PendingRequestsTextBlock to {pendingRequests}");
+				TotalStudentsTextBlock.Text = dataAccess.GetTotalStudents().ToString("N0");
+				TotalEnrollmentsTextBlock.Text = dataAccess.GetTotalEnrollments().ToString("N0");
+				AverageGradeTextBlock.Text = dataAccess.GetAverageGrade().ToString("F2");
+				ActiveCoursesTextBlock.Text = dataAccess.GetActiveCourses().ToString("N0");
+				NewStudentsTextBlock.Text = dataAccess.GetNewStudentsThisYear().ToString("N0");
+				PendingRequestsTextBlock.Text = dataAccess.GetPendingEnrollmentRequestsCount().ToString("N0");
 			}
 			catch (Exception ex)
 			{
-				System.Diagnostics.Debug.WriteLine($"UpdateDashboard: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
-				MessageBox.Show($"Error loading dashboard data: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+				MessageBox.Show($"Error updating dashboard: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
 				TotalStudentsTextBlock.Text = "0";
+				TotalEnrollmentsTextBlock.Text = "0";
+				AverageGradeTextBlock.Text = "0.00";
+				ActiveCoursesTextBlock.Text = "0";
+				NewStudentsTextBlock.Text = "0";
 				PendingRequestsTextBlock.Text = "0";
 			}
 		}

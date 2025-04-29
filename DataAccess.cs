@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Security.Claims;
 using StudentManagementSystem.Models;
 
 namespace StudentManagementSystem
@@ -1793,5 +1794,98 @@ namespace StudentManagementSystem
 				throw new Exception("Error retrieving pending enrollment requests count.", ex);
 			}
 		}
+
+		public int GetTotalEnrollments()
+		{
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = "SELECT COUNT(*) FROM [Enrol]";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						int count = (int)cmd.ExecuteScalar();
+						Debug.WriteLine($"GetTotalEnrollments: Total enrollments = {count}");
+						return count;
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"GetTotalEnrollments: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error retrieving total enrollments.", ex);
+			}
+		}
+
+		public decimal GetAverageGrade()
+		{
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = "SELECT AVG(CAST(Mark AS DECIMAL(4,2))) FROM [Enrol] WHERE Mark IS NOT NULL";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						object result = cmd.ExecuteScalar();
+						decimal average = result != DBNull.Value ? Convert.ToDecimal(result) : 0;
+						Debug.WriteLine($"GetAverageGrade: Average grade = {average}");
+						return Math.Round(average, 1);
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"GetAverageGrade: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error retrieving average grade.", ex);
+			}
+		}
+
+		public int GetActiveCourses()
+		{
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = "SELECT COUNT(*) FROM [Subject]";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						int count = (int)cmd.ExecuteScalar();
+						Debug.WriteLine($"GetActiveCourses: Active courses = {count}");
+						return count;
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"GetActiveCourses: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error retrieving active courses.", ex);
+			}
+		}
+
+		public int GetNewStudentsThisYear()
+		{
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = @"
+                        SELECT COUNT(*) 
+                        FROM [Student] 
+                        WHERE YEAR(CreatedAt) = YEAR(GETDATE())";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						int count = (int)cmd.ExecuteScalar();
+						Debug.WriteLine($"GetNewStudentsThisYear: New students = {count}");
+						return count;
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"GetNewStudentsThisYear: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error retrieving new students count.", ex);
+			}
+		}
+
 	}
 }
