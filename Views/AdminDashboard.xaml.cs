@@ -17,6 +17,7 @@ namespace StudentManagementSystem.Views
 		{
 			InitializeComponent();
 			dataAccess = new DataAccess();
+			dashboardContent = MainContent.Content as UIElement;
 			UpdateDashboard();
 
 			timer = new DispatcherTimer
@@ -116,6 +117,11 @@ namespace StudentManagementSystem.Views
 		private void ManageClasses_Click(object sender, RoutedEventArgs e)
 		{
 			MainContent.Content = new ClassManagementView();
+		}
+
+		private void ManageTeachers_Click(object sender, RoutedEventArgs e)
+		{
+			MainContent.Content = new TeacherManagementView();
 		}
 
 		private void Logout_Click(object sender, RoutedEventArgs e)

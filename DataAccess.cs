@@ -2029,271 +2029,86 @@ namespace StudentManagementSystem
 		// Teacher Management
 		public List<Teacher> GetTeachers()
 		{
-			List<Teacher> teachers = new List<Teacher>();
-			try
+			var teachers = new List<Teacher>();
+			using (var connection = new SqlConnection(connectionString))
 			{
-				using (SqlConnection conn = GetConnection())
+				connection.Open();
+				var command = new SqlCommand("SELECT * FROM Teacher", connection);
+				var reader = command.ExecuteReader();
+				while (reader.Read())
 				{
-					string query = @"
-                        SELECT Id, Name, Email, Major, ProfessionalQualification, Gender, Ethnicity, 
-                               PartyMember, ForeignLanguageLevel, ITLevel 
-                        FROM [Teacher]";
-					using (SqlCommand cmd = new SqlCommand(query, conn))
+					teachers.Add(new Teacher
 					{
-						using (SqlDataReader reader = cmd.ExecuteReader())
-						{
-							while (reader.Read())
-							{
-								teachers.Add(new Teacher
-								{
-									Id = reader.GetString(reader.GetOrdinal("Id")),
-									Name = reader.GetString(reader.GetOrdinal("Name")),
-									Email = reader.GetString(reader.GetOrdinal("Email")),
-									Major = reader.IsDBNull(reader.GetOrdinal("Major")) ? null : reader.GetString(reader.GetOrdinal("Major")),
-									ProfessionalQualification = reader.IsDBNull(reader.GetOrdinal("ProfessionalQualification")) ? null : reader.GetString(reader.GetOrdinal("ProfessionalQualification")),
-									Gender = reader.IsDBNull(reader.GetOrdinal("Gender")) ? null : reader.GetBoolean(reader.GetOrdinal("Gender")),
-									Ethnicity = reader.IsDBNull(reader.GetOrdinal("Ethnicity")) ? null : reader.GetString(reader.GetOrdinal("Ethnicity")),
-									PartyMember = reader.IsDBNull(reader.GetOrdinal("PartyMember")) ? null : reader.GetBoolean(reader.GetOrdinal("PartyMember")),
-									ForeignLanguageLevel = reader.IsDBNull(reader.GetOrdinal("ForeignLanguageLevel")) ? null : reader.GetString(reader.GetOrdinal("ForeignLanguageLevel")),
-									ITLevel = reader.IsDBNull(reader.GetOrdinal("ITLevel")) ? null : reader.GetString(reader.GetOrdinal("ITLevel"))
-								});
-							}
-						}
-					}
+						Id = reader["Id"].ToString(),
+						Name = reader["Name"].ToString(),
+						Email = reader["Email"].ToString(),
+						Major = reader["Major"] == DBNull.Value ? null : reader["Major"].ToString(),
+						ProfessionalQualification = reader["ProfessionalQualification"] == DBNull.Value ? null : reader["ProfessionalQualification"].ToString(),
+						Gender = reader["Gender"] == DBNull.Value ? null : (bool?)reader["Gender"],
+						Ethnicity = reader["Ethnicity"] == DBNull.Value ? null : reader["Ethnicity"].ToString(),
+						PartyMember = reader["PartyMember"] == DBNull.Value ? null : (bool?)reader["PartyMember"],
+						ForeignLanguageLevel = reader["ForeignLanguageLevel"] == DBNull.Value ? null : reader["ForeignLanguageLevel"].ToString(),
+						ITLevel = reader["ITLevel"] == DBNull.Value ? null : reader["ITLevel"].ToString()
+					});
 				}
-				Debug.WriteLine($"GetTeachers: Found {teachers.Count} teachers.");
-				return teachers;
 			}
-			catch (SqlException ex)
-			{
-				Debug.WriteLine($"GetTeachers: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
-				throw new Exception("Error retrieving teachers.", ex);
-			}
+			return teachers;
 		}
 
 		public void AddTeacher(Teacher teacher)
 		{
-			if (teacher == null || string.IsNullOrWhiteSpace(teacher.Id) || string.IsNullOrWhiteSpace(teacher.Name) || string.IsNullOrWhiteSpace(teacher.Email))
+			using (var connection = new SqlConnection(connectionString))
 			{
-				Debug.WriteLine($"AddTeacher: Invalid teacher data (Id='{teacher?.Id}', Name='{teacher?.Name}', Email='{teacher?.Email}')");
-				throw new ArgumentException("Teacher data is invalid.");
-			}
-
-			// Check email uniqueness
-			if (!IsEmailUnique(teacher.Email))
-			{
-				Debug.WriteLine($"AddTeacher: Email '{teacher.Email}' already exists.");
-				throw new ArgumentException("Email already exists.");
-			}
-
-			try
-			{
-				using (SqlConnection conn = GetConnection())
-				{
-					string query = @"
-                INSERT INTO [Teacher] (Id, Name, Email, Major, ProfessionalQualification, Gender, Ethnicity, 
-                                     PartyMember, ForeignLanguageLevel, ITLevel)
-                VALUES (@Id, @Name, @Email, @Major, @ProfessionalQualification, @Gender, @Ethnicity, 
-                        @PartyMember, @ForeignLanguageLevel, @ITLevel)";
-					using (SqlCommand cmd = new SqlCommand(query, conn))
-					{
-						cmd.Parameters.AddWithValue("@Id", teacher.Id);
-						cmd.Parameters.AddWithValue("@Name", teacher.Name);
-						cmd.Parameters.AddWithValue("@Email", teacher.Email);
-						cmd.Parameters.AddWithValue("@Major", (object)teacher.Major ?? DBNull.Value);
-						cmd.Parameters.AddWithValue("@ProfessionalQualification", (object)teacher.ProfessionalQualification ?? DBNull.Value);
-						cmd.Parameters.AddWithValue("@Gender", (object)teacher.Gender ?? DBNull.Value);
-						cmd.Parameters.AddWithValue("@Ethnicity", (object)teacher.Ethnicity ?? DBNull.Value);
-						cmd.Parameters.AddWithValue("@PartyMember", (object)teacher.PartyMember ?? DBNull.Value);
-						cmd.Parameters.AddWithValue("@ForeignLanguageLevel", (object)teacher.ForeignLanguageLevel ?? DBNull.Value);
-						cmd.Parameters.AddWithValue("@ITLevel", (object)teacher.ITLevel ?? DBNull.Value);
-						Debug.WriteLine($"AddTeacher: Inserting Id={teacher.Id}, Name={teacher.Name}");
-						cmd.ExecuteNonQuery();
-					}
-				}
-			}
-			catch (SqlException ex)
-			{
-				Debug.WriteLine($"AddTeacher: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
-				throw new Exception("Error adding teacher.", ex);
-			}
-		}
-
-		public string GetNextTeacherId()
-		{
-			try
-			{
-				using (SqlConnection conn = GetConnection())
-				{
-					string query = "SELECT Id FROM [Teacher] WHERE Id LIKE 'GV%'";
-					using (SqlCommand cmd = new SqlCommand(query, conn))
-					{
-						List<int> numbers = new List<int>();
-						using (SqlDataReader reader = cmd.ExecuteReader())
-						{
-							while (reader.Read())
-							{
-								string id = reader.GetString(reader.GetOrdinal("Id"));
-								if (id.StartsWith("GV") && int.TryParse(id.Substring(2), out int number))
-								{
-									numbers.Add(number);
-								}
-							}
-						}
-
-						int nextNumber = numbers.Count > 0 ? numbers.Max() + 1 : 1;
-						string nextId = $"GV{nextNumber.ToString("D4")}";
-						Debug.WriteLine($"GetNextTeacherId: Generated ID = {nextId}");
-						return nextId;
-					}
-				}
-			}
-			catch (SqlException ex)
-			{
-				Debug.WriteLine($"GetNextTeacherId: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
-				throw new Exception("Error generating next teacher ID.", ex);
-			}
-		}
-
-		public bool IsEmailUnique(string email, string teacherId = null)
-		{
-			if (string.IsNullOrWhiteSpace(email))
-			{
-				Debug.WriteLine("IsEmailUnique: Invalid email.");
-				return false;
-			}
-
-			try
-			{
-				using (SqlConnection conn = GetConnection())
-				{
-					string query = "SELECT COUNT(*) FROM [Teacher] WHERE Email = @Email" + (teacherId != null ? " AND Id != @Id" : "");
-					using (SqlCommand cmd = new SqlCommand(query, conn))
-					{
-						cmd.Parameters.AddWithValue("@Email", email);
-						if (teacherId != null)
-						{
-							cmd.Parameters.AddWithValue("@Id", teacherId);
-						}
-						int count = (int)cmd.ExecuteScalar();
-						Debug.WriteLine($"IsEmailUnique: Email={email}, TeacherId={teacherId ?? "null"}, Unique={count == 0}");
-						return count == 0;
-					}
-				}
-			}
-			catch (SqlException ex)
-			{
-				Debug.WriteLine($"IsEmailUnique: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
-				throw new Exception("Error checking email uniqueness.", ex);
+				connection.Open();
+				var command = new SqlCommand(
+					"INSERT INTO Teacher (Id, Name, Email, Major, ProfessionalQualification, Gender, Ethnicity, PartyMember, ForeignLanguageLevel, ITLevel) " +
+					"VALUES (@Id, @Name, @Email, @Major, @ProfessionalQualification, @Gender, @Ethnicity, @PartyMember, @ForeignLanguageLevel, @ITLevel)", connection);
+				command.Parameters.AddWithValue("@Id", teacher.Id);
+				command.Parameters.AddWithValue("@Name", teacher.Name);
+				command.Parameters.AddWithValue("@Email", teacher.Email);
+				command.Parameters.AddWithValue("@Major", (object)teacher.Major ?? DBNull.Value);
+				command.Parameters.AddWithValue("@ProfessionalQualification", (object)teacher.ProfessionalQualification ?? DBNull.Value);
+				command.Parameters.AddWithValue("@Gender", (object)teacher.Gender ?? DBNull.Value);
+				command.Parameters.AddWithValue("@Ethnicity", (object)teacher.Ethnicity ?? DBNull.Value);
+				command.Parameters.AddWithValue("@PartyMember", (object)teacher.PartyMember ?? DBNull.Value);
+				command.Parameters.AddWithValue("@ForeignLanguageLevel", (object)teacher.ForeignLanguageLevel ?? DBNull.Value);
+				command.Parameters.AddWithValue("@ITLevel", (object)teacher.ITLevel ?? DBNull.Value);
+				command.ExecuteNonQuery();
 			}
 		}
 
 		public void UpdateTeacher(Teacher teacher)
 		{
-			if (teacher == null || string.IsNullOrWhiteSpace(teacher.Id) || string.IsNullOrWhiteSpace(teacher.Name) || string.IsNullOrWhiteSpace(teacher.Email))
+			using (var connection = new SqlConnection(connectionString))
 			{
-				Debug.WriteLine($"UpdateTeacher: Invalid teacher data (Id='{teacher?.Id}', Name='{teacher?.Name}', Email='{teacher?.Email}')");
-				throw new ArgumentException("Teacher data is invalid.");
-			}
-
-			// Check email uniqueness (exclude current teacher)
-			if (!IsEmailUnique(teacher.Email, teacher.Id))
-			{
-				Debug.WriteLine($"UpdateTeacher: Email '{teacher.Email}' already exists for another teacher.");
-				throw new ArgumentException("Email already exists.");
-			}
-
-			try
-			{
-				using (SqlConnection conn = GetConnection())
-				{
-					string query = @"
-                UPDATE [Teacher]
-                SET Name = @Name, Email = @Email, Major = @Major, ProfessionalQualification = @ProfessionalQualification,
-                    Gender = @Gender, Ethnicity = @Ethnicity, PartyMember = @PartyMember, 
-                    ForeignLanguageLevel = @ForeignLanguageLevel, ITLevel = @ITLevel
-                WHERE Id = @Id";
-					using (SqlCommand cmd = new SqlCommand(query, conn))
-					{
-						cmd.Parameters.AddWithValue("@Id", teacher.Id);
-						cmd.Parameters.AddWithValue("@Name", teacher.Name);
-						cmd.Parameters.AddWithValue("@Email", teacher.Email);
-						cmd.Parameters.AddWithValue("@Major", (object)teacher.Major ?? DBNull.Value);
-						cmd.Parameters.AddWithValue("@ProfessionalQualification", (object)teacher.ProfessionalQualification ?? DBNull.Value);
-						cmd.Parameters.AddWithValue("@Gender", (object)teacher.Gender ?? DBNull.Value);
-						cmd.Parameters.AddWithValue("@Ethnicity", (object)teacher.Ethnicity ?? DBNull.Value);
-						cmd.Parameters.AddWithValue("@PartyMember", (object)teacher.PartyMember ?? DBNull.Value);
-						cmd.Parameters.AddWithValue("@ForeignLanguageLevel", (object)teacher.ForeignLanguageLevel ?? DBNull.Value);
-						cmd.Parameters.AddWithValue("@ITLevel", (object)teacher.ITLevel ?? DBNull.Value);
-						Debug.WriteLine($"UpdateTeacher: Updating Id={teacher.Id}, Name={teacher.Name}");
-						int rowsAffected = cmd.ExecuteNonQuery();
-						if (rowsAffected == 0)
-						{
-							Debug.WriteLine($"UpdateTeacher: No rows affected for Id={teacher.Id}");
-							throw new Exception("Failed to update teacher. No matching record found.");
-						}
-					}
-				}
-			}
-			catch (SqlException ex)
-			{
-				Debug.WriteLine($"UpdateTeacher: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
-				throw new Exception("Error updating teacher.", ex);
+				connection.Open();
+				var command = new SqlCommand(
+					"UPDATE Teacher SET Name = @Name, Email = @Email, Major = @Major, ProfessionalQualification = @ProfessionalQualification, " +
+					"Gender = @Gender, Ethnicity = @Ethnicity, PartyMember = @PartyMember, " +
+					"ForeignLanguageLevel = @ForeignLanguageLevel, ITLevel = @ITLevel " +
+					"WHERE Id = @Id", connection);
+				command.Parameters.AddWithValue("@Id", teacher.Id);
+				command.Parameters.AddWithValue("@Name", teacher.Name);
+				command.Parameters.AddWithValue("@Email", teacher.Email);
+				command.Parameters.AddWithValue("@Major", (object)teacher.Major ?? DBNull.Value);
+				command.Parameters.AddWithValue("@ProfessionalQualification", (object)teacher.ProfessionalQualification ?? DBNull.Value);
+				command.Parameters.AddWithValue("@Gender", (object)teacher.Gender ?? DBNull.Value);
+				command.Parameters.AddWithValue("@Ethnicity", (object)teacher.Ethnicity ?? DBNull.Value);
+				command.Parameters.AddWithValue("@PartyMember", (object)teacher.PartyMember ?? DBNull.Value);
+				command.Parameters.AddWithValue("@ForeignLanguageLevel", (object)teacher.ForeignLanguageLevel ?? DBNull.Value);
+				command.Parameters.AddWithValue("@ITLevel", (object)teacher.ITLevel ?? DBNull.Value);
+				command.ExecuteNonQuery();
 			}
 		}
 
-		public void DeleteTeacher(string id)
+		public void DeleteTeacher(string teacherId)
 		{
-			if (string.IsNullOrWhiteSpace(id))
+			using (var connection = new SqlConnection(connectionString))
 			{
-				Debug.WriteLine("DeleteTeacher: Invalid Id.");
-				throw new ArgumentException("Teacher ID is invalid.");
-			}
-
-			try
-			{
-				using (SqlConnection conn = GetConnection())
-				{
-					// Check for dependencies in TeacherClass
-					string checkQuery = "SELECT COUNT(*) FROM [TeacherClass] WHERE TeacherId = @Id";
-					using (SqlCommand checkCmd = new SqlCommand(checkQuery, conn))
-					{
-						checkCmd.Parameters.AddWithValue("@Id", id);
-						int count = (int)checkCmd.ExecuteScalar();
-						if (count > 0)
-						{
-							// Optionally: Remove assignments
-							string removeAssignmentsQuery = "DELETE FROM [TeacherClass] WHERE TeacherId = @Id";
-							using (SqlCommand removeCmd = new SqlCommand(removeAssignmentsQuery, conn))
-							{
-								removeCmd.Parameters.AddWithValue("@Id", id);
-								Debug.WriteLine($"DeleteTeacher: Removing {count} class assignments for TeacherId={id}");
-								removeCmd.ExecuteNonQuery();
-							}
-							// Alternatively, you could throw an exception to prevent deletion:
-							// throw new Exception("Cannot delete teacher because they are assigned to one or more classes.");
-						}
-					}
-
-					// Delete the teacher
-					string query = "DELETE FROM [Teacher] WHERE Id = @Id";
-					using (SqlCommand cmd = new SqlCommand(query, conn))
-					{
-						cmd.Parameters.AddWithValue("@Id", id);
-						Debug.WriteLine($"DeleteTeacher: Deleting Id={id}");
-						int rowsAffected = cmd.ExecuteNonQuery();
-						if (rowsAffected == 0)
-						{
-							Debug.WriteLine($"DeleteTeacher: No rows affected for Id={id}");
-							throw new Exception("Failed to delete teacher. No matching record found.");
-						}
-					}
-				}
-			}
-			catch (SqlException ex)
-			{
-				Debug.WriteLine($"DeleteTeacher: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
-				throw new Exception("Error deleting teacher.", ex);
+				connection.Open();
+				var command = new SqlCommand("DELETE FROM Teacher WHERE Id = @Id", connection);
+				command.Parameters.AddWithValue("@Id", teacherId);
+				command.ExecuteNonQuery();
 			}
 		}
 

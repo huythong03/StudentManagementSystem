@@ -1,5 +1,6 @@
 ﻿using StudentManagementSystem.Models;
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -16,6 +17,7 @@ namespace StudentManagementSystem.Views
 			InitializeComponent();
 			dataAccess = new DataAccess();
 			LoadClasses();
+			LoadSubjects();
 		}
 
 		private void LoadClasses()
@@ -30,14 +32,47 @@ namespace StudentManagementSystem.Views
 			}
 		}
 
+		private void LoadSubjects()
+		{
+			try
+			{
+				cbSubjectId.ItemsSource = dataAccess.GetSubjects();
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show($"Failed to load subjects: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+			}
+		}
+
+		private string GetNextClassId()
+		{
+			try
+			{
+				var classes = dataAccess.GetClasses();
+				if (!classes.Any())
+					return "CL0001";
+
+				int maxId = classes
+					.Select(c => int.Parse(c.Id.Substring(2)))
+					.Max();
+				return $"CL{(maxId + 1):D4}";
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show($"Failed to generate next class ID: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+				return "CL0001";
+			}
+		}
+
 		private void AddClass_Click(object sender, RoutedEventArgs e)
 		{
 			isEditMode = false;
 			selectedClass = null;
 			PanelTitle.Text = "Add Class";
-			txtId.Text = "";
+			txtId.Text = GetNextClassId();
+			txtId.IsReadOnly = true;
 			txtName.Text = "";
-			txtSubjectId.Text = "";
+			cbSubjectId.SelectedIndex = -1;
 			dpStartDate.SelectedDate = null;
 			dpEndDate.SelectedDate = null;
 			InputPanel.Visibility = Visibility.Visible;
@@ -51,9 +86,9 @@ namespace StudentManagementSystem.Views
 				selectedClass = classObj;
 				PanelTitle.Text = "Edit Class";
 				txtId.Text = classObj.Id;
-				txtId.IsReadOnly = true; // Prevent editing ID in edit mode
+				txtId.IsReadOnly = true;
 				txtName.Text = classObj.Name;
-				txtSubjectId.Text = classObj.SubjectId;
+				cbSubjectId.SelectedValue = classObj.SubjectId;
 				dpStartDate.SelectedDate = classObj.StartDate;
 				dpEndDate.SelectedDate = classObj.EndDate;
 				InputPanel.Visibility = Visibility.Visible;
@@ -93,7 +128,7 @@ namespace StudentManagementSystem.Views
 		{
 			if (string.IsNullOrWhiteSpace(txtId.Text) ||
 				string.IsNullOrWhiteSpace(txtName.Text) ||
-				string.IsNullOrWhiteSpace(txtSubjectId.Text) ||
+				cbSubjectId.SelectedValue == null ||
 				!dpStartDate.SelectedDate.HasValue ||
 				!dpEndDate.SelectedDate.HasValue)
 			{
@@ -113,7 +148,7 @@ namespace StudentManagementSystem.Views
 				{
 					Id = txtId.Text,
 					Name = txtName.Text,
-					SubjectId = txtSubjectId.Text,
+					SubjectId = cbSubjectId.SelectedValue.ToString(),
 					StartDate = dpStartDate.SelectedDate.Value,
 					EndDate = dpEndDate.SelectedDate.Value
 				};
@@ -129,25 +164,33 @@ namespace StudentManagementSystem.Views
 
 				LoadClasses();
 				InputPanel.Visibility = Visibility.Collapsed;
-				txtId.IsReadOnly = false; // Reset for next add
+				txtId.IsReadOnly = false;
 				MessageBox.Show("Class saved successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+
+				txtId.Text = GetNextClassId();
+				txtId.IsReadOnly = true;
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show($"Failed to save class: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+				string errorDetails = ex.InnerException != null ? $"\nDetails: {ex.InnerException.Message}" : "";
+				MessageBox.Show($"Failed to save class: {ex.Message}{errorDetails}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
 			}
 		}
 
 		private void CancelInput_Click(object sender, RoutedEventArgs e)
 		{
 			InputPanel.Visibility = Visibility.Collapsed;
-			txtId.IsReadOnly = false; // Reset for next add
+			txtId.IsReadOnly = false;
+			txtId.Text = GetNextClassId();
+			txtId.IsReadOnly = true;
 		}
 
 		private void ClassesGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
 			InputPanel.Visibility = Visibility.Collapsed;
-			txtId.IsReadOnly = false; // Reset for next add
+			txtId.IsReadOnly = false;
+			txtId.Text = GetNextClassId();
+			txtId.IsReadOnly = true;
 		}
 	}
 }

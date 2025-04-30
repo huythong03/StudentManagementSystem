@@ -186,112 +186,123 @@
 
                 <!-- Buttons with Icons -->
                 <Button Style="{StaticResource SidebarButtonStyle}"
-                Click="ManageStudents_Click">
+        Click="ManageStudents_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="AccountMultiple"
-                                         Width="20"
-                                         Height="20"
-                                         Margin="0,0,12,0"
-                                         VerticalAlignment="Center"/>
+                         Width="20"
+                         Height="20"
+                         Margin="0,0,12,0"
+                         VerticalAlignment="Center"/>
                         <TextBlock Text="Manage Students"/>
                     </StackPanel>
                 </Button>
                 <Button Style="{StaticResource SidebarButtonStyle}"
-                Click="ManageUsers_Click">
+        Click="ManageUsers_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Account"
-                                         Width="20"
-                                         Height="20"
-                                         Margin="0,0,12,0"
-                                         VerticalAlignment="Center"/>
+                         Width="20"
+                         Height="20"
+                         Margin="0,0,12,0"
+                         VerticalAlignment="Center"/>
                         <TextBlock Text="Manage Users"/>
                     </StackPanel>
                 </Button>
                 <Button Style="{StaticResource SidebarButtonStyle}"
-                Click="ManageRoles_Click">
+        Click="ManageRoles_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="ShieldAccount"
-                                         Width="20"
-                                         Height="20"
-                                         Margin="0,0,12,0"
-                                         VerticalAlignment="Center"/>
+                         Width="20"
+                         Height="20"
+                         Margin="0,0,12,0"
+                         VerticalAlignment="Center"/>
                         <TextBlock Text="Manage Roles"/>
                     </StackPanel>
                 </Button>
                 <Button Style="{StaticResource SidebarButtonStyle}"
-                Click="ManageUserRoles_Click">
+        Click="ManageUserRoles_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="AccountKey"
-                                         Width="20"
-                                         Height="20"
-                                         Margin="0,0,12,0"
-                                         VerticalAlignment="Center"/>
+                         Width="20"
+                         Height="20"
+                         Margin="0,0,12,0"
+                         VerticalAlignment="Center"/>
                         <TextBlock Text="Manage User Roles"/>
                     </StackPanel>
                 </Button>
                 <Button Style="{StaticResource SidebarButtonStyle}"
-                Click="ManageSubjects_Click">
+        Click="ManageSubjects_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="BookOpen"
-                                         Width="20"
-                                         Height="20"
-                                         Margin="0,0,12,0"
-                                         VerticalAlignment="Center"/>
+                         Width="20"
+                         Height="20"
+                         Margin="0,0,12,0"
+                         VerticalAlignment="Center"/>
                         <TextBlock Text="Manage Subjects"/>
                     </StackPanel>
                 </Button>
                 <Button Style="{StaticResource SidebarButtonStyle}"
-                Click="ManageProvinces_Click">
+        Click="ManageProvinces_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Map"
-                                         Width="20"
-                                         Height="20"
-                                         Margin="0,0,12,0"
-                                         VerticalAlignment="Center"/>
+                         Width="20"
+                         Height="20"
+                         Margin="0,0,12,0"
+                         VerticalAlignment="Center"/>
                         <TextBlock Text="Manage Provinces"/>
                     </StackPanel>
                 </Button>
                 <Button Style="{StaticResource SidebarButtonStyle}"
-                Click="ManageClasses_Click">
+        Click="ManageClasses_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="School"
-                                         Width="20"
-                                         Height="20"
-                                         Margin="0,0,12,0"
-                                         VerticalAlignment="Center"/>
+                         Width="20"
+                         Height="20"
+                         Margin="0,0,12,0"
+                         VerticalAlignment="Center"/>
                         <TextBlock Text="Manage Classes"/>
                     </StackPanel>
                 </Button>
                 <Button Style="{StaticResource SidebarButtonStyle}"
-                Click="ViewEnrollments_Click">
+        Click="ManageTeachers_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="AccountTie"
+                         Width="20"
+                         Height="20"
+                         Margin="0,0,12,0"
+                         VerticalAlignment="Center"/>
+                        <TextBlock Text="Manage Teachers"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource SidebarButtonStyle}"
+        Click="ViewEnrollments_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="ClipboardList"
-                                         Width="20"
-                                         Height="20"
-                                         Margin="0,0,12,0"
-                                         VerticalAlignment="Center"/>
+                         Width="20"
+                         Height="20"
+                         Margin="0,0,12,0"
+                         VerticalAlignment="Center"/>
                         <TextBlock Text="View Enrollments"/>
                     </StackPanel>
                 </Button>
                 <Button Style="{StaticResource SidebarButtonStyle}"
-                Click="SearchGrades_Click">
+        Click="SearchGrades_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Magnify"
-                                         Width="20"
-                                         Height="20"
-                                         Margin="0,0,12,0"
-                                         VerticalAlignment="Center"/>
+                         Width="20"
+                         Height="20"
+                         Margin="0,0,12,0"
+                         VerticalAlignment="Center"/>
                         <TextBlock Text="Search Student Grades"/>
                     </StackPanel>
                 </Button>
                 <Button Style="{StaticResource SidebarButtonStyle}"
-                Click="ManageEnrollRequests_Click">
+        Click="ManageEnrollRequests_Click">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="ClipboardCheck" 
-                                        Width="20"
-                                        Height="20"
-                                        Margin="0,0,12,0"
-                                        VerticalAlignment="Center"/>
+                        Width="20"
+                        Height="20"
+                        Margin="0,0,12,0"
+                        VerticalAlignment="Center"/>
                         <TextBlock Text="Manage Enroll Requests"/>
                     </StackPanel>
                 </Button>
