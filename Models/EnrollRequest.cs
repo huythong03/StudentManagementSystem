@@ -8,6 +8,6 @@
 		public string IdSubject { get; set; }
 		public string SubjectName { get; set; }
 		public DateTime RequestDate { get; set; }
-		public string Status { get; set; } // Pending, Approved, Rejected
+		public string Status { get; set; } // Pending, Approved, Rejected (Đang chờ xử lý, Đã phê duyệt, Bị từ chối)
 	}
 }

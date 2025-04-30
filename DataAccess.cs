@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Security.Claims;
+using System.Windows;
 using StudentManagementSystem.Models;
 
 namespace StudentManagementSystem
@@ -1890,38 +1891,33 @@ namespace StudentManagementSystem
 		// Class Management
 		public List<Class> GetClasses()
 		{
-			List<Class> classes = new List<Class>();
+			var classes = new List<Class>();
 			try
 			{
-				using (SqlConnection conn = GetConnection())
+				using (var connection = new SqlConnection(connectionString))
 				{
-					string query = "SELECT Id, Name, SubjectId, StartDate, EndDate FROM [Class]";
-					using (SqlCommand cmd = new SqlCommand(query, conn))
+					connection.Open();
+					var command = new SqlCommand("SELECT Id, Name, SubjectId, StartDate, EndDate FROM Class", connection);
+					var reader = command.ExecuteReader();
+					while (reader.Read())
 					{
-						using (SqlDataReader reader = cmd.ExecuteReader())
+						classes.Add(new Class
 						{
-							while (reader.Read())
-							{
-								classes.Add(new Class
-								{
-									Id = reader.GetString(reader.GetOrdinal("Id")),
-									Name = reader.GetString(reader.GetOrdinal("Name")),
-									SubjectId = reader.GetString(reader.GetOrdinal("SubjectId")),
-									StartDate = reader.GetDateTime(reader.GetOrdinal("StartDate")),
-									EndDate = reader.GetDateTime(reader.GetOrdinal("EndDate"))
-								});
-							}
-						}
+							Id = reader["Id"].ToString(),
+							Name = reader["Name"].ToString(),
+							SubjectId = reader["SubjectId"].ToString(),
+							StartDate = reader["StartDate"] == DBNull.Value ? null : (DateTime?)reader["StartDate"],
+							EndDate = reader["EndDate"] == DBNull.Value ? null : (DateTime?)reader["EndDate"]
+						});
 					}
 				}
-				Debug.WriteLine($"GetClasses: Found {classes.Count} classes.");
-				return classes;
 			}
-			catch (SqlException ex)
+			catch (Exception ex)
 			{
-				Debug.WriteLine($"GetClasses: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
-				throw new Exception("Error retrieving classes.", ex);
+				throw new Exception($"Error loading classes: {ex.Message}", ex);
 			}
+			Debug.WriteLine($"Loaded {classes.Count} classes from database.");
+			return classes;
 		}
 
 		public void AddClass(Class classObj)
@@ -2030,28 +2026,36 @@ namespace StudentManagementSystem
 		public List<Teacher> GetTeachers()
 		{
 			var teachers = new List<Teacher>();
-			using (var connection = new SqlConnection(connectionString))
+			try
 			{
-				connection.Open();
-				var command = new SqlCommand("SELECT * FROM Teacher", connection);
-				var reader = command.ExecuteReader();
-				while (reader.Read())
+				using (var connection = new SqlConnection(connectionString))
 				{
-					teachers.Add(new Teacher
+					connection.Open();
+					var command = new SqlCommand("SELECT * FROM Teacher", connection);
+					var reader = command.ExecuteReader();
+					while (reader.Read())
 					{
-						Id = reader["Id"].ToString(),
-						Name = reader["Name"].ToString(),
-						Email = reader["Email"].ToString(),
-						Major = reader["Major"] == DBNull.Value ? null : reader["Major"].ToString(),
-						ProfessionalQualification = reader["ProfessionalQualification"] == DBNull.Value ? null : reader["ProfessionalQualification"].ToString(),
-						Gender = reader["Gender"] == DBNull.Value ? null : (bool?)reader["Gender"],
-						Ethnicity = reader["Ethnicity"] == DBNull.Value ? null : reader["Ethnicity"].ToString(),
-						PartyMember = reader["PartyMember"] == DBNull.Value ? null : (bool?)reader["PartyMember"],
-						ForeignLanguageLevel = reader["ForeignLanguageLevel"] == DBNull.Value ? null : reader["ForeignLanguageLevel"].ToString(),
-						ITLevel = reader["ITLevel"] == DBNull.Value ? null : reader["ITLevel"].ToString()
-					});
+						teachers.Add(new Teacher
+						{
+							Id = reader["Id"].ToString(),
+							Name = reader["Name"].ToString(),
+							Email = reader["Email"].ToString(),
+							Major = reader["Major"] == DBNull.Value ? null : reader["Major"].ToString(),
+							ProfessionalQualification = reader["ProfessionalQualification"] == DBNull.Value ? null : reader["ProfessionalQualification"].ToString(),
+							Gender = reader["Gender"] == DBNull.Value ? null : (bool?)reader["Gender"],
+							Ethnicity = reader["Ethnicity"] == DBNull.Value ? null : reader["Ethnicity"].ToString(),
+							PartyMember = reader["PartyMember"] == DBNull.Value ? null : (bool?)reader["PartyMember"],
+							ForeignLanguageLevel = reader["ForeignLanguageLevel"] == DBNull.Value ? null : reader["ForeignLanguageLevel"].ToString(),
+							ITLevel = reader["ITLevel"] == DBNull.Value ? null : reader["ITLevel"].ToString()
+						});
+					}
 				}
 			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error loading teachers: {ex.Message}", ex);
+			}
+			Debug.WriteLine($"Loaded {teachers.Count} teachers from database.");
 			return teachers;
 		}
 
@@ -2112,109 +2116,82 @@ namespace StudentManagementSystem
 			}
 		}
 
-		// Teacher-Class Assignment
-		public void AssignTeacherToClass(string teacherId, string classId)
+		public List<TeacherClassAssignment> GetTeacherClassAssignments()
 		{
-			if (string.IsNullOrWhiteSpace(teacherId) || string.IsNullOrWhiteSpace(classId))
-			{
-				Debug.WriteLine($"AssignTeacherToClass: Invalid input (TeacherId='{teacherId}', ClassId='{classId}')");
-				throw new ArgumentException("Teacher ID or Class ID is invalid.");
-			}
-
+			var assignments = new List<TeacherClassAssignment>();
 			try
 			{
-				using (SqlConnection conn = GetConnection())
+				using (var connection = new SqlConnection(connectionString))
 				{
-					string query = "INSERT INTO [TeacherClass] (TeacherId, ClassId) VALUES (@TeacherId, @ClassId)";
-					using (SqlCommand cmd = new SqlCommand(query, conn))
+					connection.Open();
+					var command = new SqlCommand(
+						"SELECT tc.TeacherId, t.Name AS TeacherName, tc.ClassId, c.Name " +
+						"FROM TeacherClass tc " +
+						"JOIN Teacher t ON tc.TeacherId = t.Id " +
+						"JOIN Class c ON tc.ClassId = c.Id", connection);
+					var reader = command.ExecuteReader();
+					while (reader.Read())
 					{
-						cmd.Parameters.AddWithValue("@TeacherId", teacherId);
-						cmd.Parameters.AddWithValue("@ClassId", classId);
-						Debug.WriteLine($"AssignTeacherToClass: Assigning TeacherId={teacherId} to ClassId={classId}");
-						cmd.ExecuteNonQuery();
-					}
-				}
-			}
-			catch (SqlException ex)
-			{
-				Debug.WriteLine($"AssignTeacherToClass: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
-				throw new Exception("Error assigning teacher to class.", ex);
-			}
-		}
-
-		public void RemoveTeacherFromClass(string teacherId, string classId)
-		{
-			if (string.IsNullOrWhiteSpace(teacherId) || string.IsNullOrWhiteSpace(classId))
-			{
-				Debug.WriteLine($"RemoveTeacherFromClass: Invalid input (TeacherId='{teacherId}', ClassId='{classId}')");
-				throw new ArgumentException("Teacher ID or Class ID is invalid.");
-			}
-
-			try
-			{
-				using (SqlConnection conn = GetConnection())
-				{
-					string query = "DELETE FROM [TeacherClass] WHERE TeacherId = @TeacherId AND ClassId = @ClassId";
-					using (SqlCommand cmd = new SqlCommand(query, conn))
-					{
-						cmd.Parameters.AddWithValue("@TeacherId", teacherId);
-						cmd.Parameters.AddWithValue("@ClassId", classId);
-						Debug.WriteLine($"RemoveTeacherFromClass: Removing TeacherId={teacherId} from ClassId={classId}");
-						cmd.ExecuteNonQuery();
-					}
-				}
-			}
-			catch (SqlException ex)
-			{
-				Debug.WriteLine($"RemoveTeacherFromClass: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
-				throw new Exception("Error removing teacher from class.", ex);
-			}
-		}
-
-		public List<Class> GetClassesByTeacher(string teacherId)
-		{
-			if (string.IsNullOrWhiteSpace(teacherId))
-			{
-				Debug.WriteLine("GetClassesByTeacher: Invalid TeacherId.");
-				return new List<Class>();
-			}
-
-			List<Class> classes = new List<Class>();
-			try
-			{
-				using (SqlConnection conn = GetConnection())
-				{
-					string query = @"
-                        SELECT c.Id, c.Name, c.SubjectId, c.StartDate, c.EndDate
-                        FROM [Class] c
-                        JOIN [TeacherClass] tc ON c.Id = tc.ClassId
-                        WHERE tc.TeacherId = @TeacherId";
-					using (SqlCommand cmd = new SqlCommand(query, conn))
-					{
-						cmd.Parameters.AddWithValue("@TeacherId", teacherId);
-						using (SqlDataReader reader = cmd.ExecuteReader())
+						var assignment = new TeacherClassAssignment
 						{
-							while (reader.Read())
-							{
-								classes.Add(new Class
-								{
-									Id = reader.GetString(reader.GetOrdinal("Id")),
-									Name = reader.GetString(reader.GetOrdinal("Name")),
-									SubjectId = reader.GetString(reader.GetOrdinal("SubjectId")),
-									StartDate = reader.GetDateTime(reader.GetOrdinal("StartDate")),
-									EndDate = reader.GetDateTime(reader.GetOrdinal("EndDate"))
-								});
-							}
-						}
+							TeacherId = reader["TeacherId"].ToString(),
+							TeacherName = reader["TeacherName"].ToString(),
+							ClassId = reader["ClassId"].ToString(),
+							Name = reader["Name"] == DBNull.Value ? "N/A" : reader["Name"].ToString()
+						};
+						assignments.Add(assignment);
+						Debug.WriteLine($"Assignment: TeacherId={assignment.TeacherId}, TeacherName={assignment.TeacherName}, ClassId={assignment.ClassId}, ClassName={assignment.Name}");
 					}
 				}
-				Debug.WriteLine($"GetClassesByTeacher: Found {classes.Count} classes for TeacherId={teacherId}");
-				return classes;
 			}
-			catch (SqlException ex)
+			catch (Exception ex)
 			{
-				Debug.WriteLine($"GetClassesByTeacher: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
-				throw new Exception("Error retrieving classes for teacher.", ex);
+				throw new Exception($"Error loading teacher-class assignments: {ex.Message}", ex);
+			}
+			Debug.WriteLine($"Loaded {assignments.Count} teacher-class assignments from database.");
+			return assignments;
+		}
+
+		public void AddTeacherClassAssignment(TeacherClassAssignment assignment)
+		{
+			using (var connection = new SqlConnection(connectionString))
+			{
+				connection.Open();
+				var command = new SqlCommand(
+					"INSERT INTO TeacherClass (TeacherId, ClassId) " +
+					"VALUES (@TeacherId, @ClassId)", connection);
+				command.Parameters.AddWithValue("@TeacherId", assignment.TeacherId);
+				command.Parameters.AddWithValue("@ClassId", assignment.ClassId);
+				command.ExecuteNonQuery();
+			}
+		}
+
+		public void UpdateTeacherClassAssignment(TeacherClassAssignment assignment, string oldTeacherId, string oldClassId)
+		{
+			using (var connection = new SqlConnection(connectionString))
+			{
+				connection.Open();
+				var command = new SqlCommand(
+					"UPDATE TeacherClass SET TeacherId = @NewTeacherId, ClassId = @NewClassId " +
+					"WHERE TeacherId = @OldTeacherId AND ClassId = @OldClassId", connection);
+				command.Parameters.AddWithValue("@NewTeacherId", assignment.TeacherId);
+				command.Parameters.AddWithValue("@NewClassId", assignment.ClassId);
+				command.Parameters.AddWithValue("@OldTeacherId", oldTeacherId);
+				command.Parameters.AddWithValue("@OldClassId", oldClassId);
+				command.ExecuteNonQuery();
+			}
+		}
+
+		public void DeleteTeacherClassAssignment(string teacherId, string classId)
+		{
+			using (var connection = new SqlConnection(connectionString))
+			{
+				connection.Open();
+				var command = new SqlCommand(
+					"DELETE FROM TeacherClass WHERE TeacherId = @TeacherId AND ClassId = @ClassId", connection);
+				command.Parameters.AddWithValue("@TeacherId", teacherId);
+				command.Parameters.AddWithValue("@ClassId", classId);
+				command.ExecuteNonQuery();
 			}
 		}
 

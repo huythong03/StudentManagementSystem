@@ -124,6 +124,11 @@ namespace StudentManagementSystem.Views
 			MainContent.Content = new TeacherManagementView();
 		}
 
+		private void AssignTeachersToClasses_Click(object sender, RoutedEventArgs e)
+		{
+			MainContent.Content = new TeacherClassAssignmentView();
+		}
+
 		private void Logout_Click(object sender, RoutedEventArgs e)
 		{
 			timer?.Stop();
