@@ -7,5 +7,6 @@
 		public DateTime BOF { get; set; }
 		public int IdProvince { get; set; }
 		public bool Gender { get; set; }
+		public DateTime CreatedAt { get; set; }
 	}
 }

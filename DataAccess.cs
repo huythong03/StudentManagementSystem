@@ -1887,5 +1887,770 @@ namespace StudentManagementSystem
 			}
 		}
 
+		// Class Management
+		public List<Class> GetClasses()
+		{
+			List<Class> classes = new List<Class>();
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = "SELECT Id, Name, SubjectId, StartDate, EndDate FROM [Class]";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						using (SqlDataReader reader = cmd.ExecuteReader())
+						{
+							while (reader.Read())
+							{
+								classes.Add(new Class
+								{
+									Id = reader.GetString(reader.GetOrdinal("Id")),
+									Name = reader.GetString(reader.GetOrdinal("Name")),
+									SubjectId = reader.GetString(reader.GetOrdinal("SubjectId")),
+									StartDate = reader.GetDateTime(reader.GetOrdinal("StartDate")),
+									EndDate = reader.GetDateTime(reader.GetOrdinal("EndDate"))
+								});
+							}
+						}
+					}
+				}
+				Debug.WriteLine($"GetClasses: Found {classes.Count} classes.");
+				return classes;
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"GetClasses: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error retrieving classes.", ex);
+			}
+		}
+
+		public void AddClass(Class classObj)
+		{
+			if (classObj == null || string.IsNullOrWhiteSpace(classObj.Id) || string.IsNullOrWhiteSpace(classObj.Name) || string.IsNullOrWhiteSpace(classObj.SubjectId))
+			{
+				Debug.WriteLine($"AddClass: Invalid class data (Id='{classObj?.Id}', Name='{classObj?.Name}', SubjectId='{classObj?.SubjectId}')");
+				throw new ArgumentException("Class data is invalid.");
+			}
+
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = @"
+                        INSERT INTO [Class] (Id, Name, SubjectId, StartDate, EndDate)
+                        VALUES (@Id, @Name, @SubjectId, @StartDate, @EndDate)";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						cmd.Parameters.AddWithValue("@Id", classObj.Id);
+						cmd.Parameters.AddWithValue("@Name", classObj.Name);
+						cmd.Parameters.AddWithValue("@SubjectId", classObj.SubjectId);
+						cmd.Parameters.AddWithValue("@StartDate", classObj.StartDate);
+						cmd.Parameters.AddWithValue("@EndDate", classObj.EndDate);
+						Debug.WriteLine($"AddClass: Inserting Id={classObj.Id}, Name={classObj.Name}");
+						cmd.ExecuteNonQuery();
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"AddClass: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error adding class.", ex);
+			}
+		}
+
+		public void UpdateClass(Class classObj)
+		{
+			if (classObj == null || string.IsNullOrWhiteSpace(classObj.Id) || string.IsNullOrWhiteSpace(classObj.Name) || string.IsNullOrWhiteSpace(classObj.SubjectId))
+			{
+				Debug.WriteLine($"UpdateClass: Invalid class data (Id='{classObj?.Id}', Name='{classObj?.Name}', SubjectId='{classObj?.SubjectId}')");
+				throw new ArgumentException("Class data is invalid.");
+			}
+
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = @"
+                        UPDATE [Class]
+                        SET Name = @Name, SubjectId = @SubjectId, StartDate = @StartDate, EndDate = @EndDate
+                        WHERE Id = @Id";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						cmd.Parameters.AddWithValue("@Id", classObj.Id);
+						cmd.Parameters.AddWithValue("@Name", classObj.Name);
+						cmd.Parameters.AddWithValue("@SubjectId", classObj.SubjectId);
+						cmd.Parameters.AddWithValue("@StartDate", classObj.StartDate);
+						cmd.Parameters.AddWithValue("@EndDate", classObj.EndDate);
+						Debug.WriteLine($"UpdateClass: Updating Id={classObj.Id}, Name={classObj.Name}");
+						int rowsAffected = cmd.ExecuteNonQuery();
+						if (rowsAffected == 0)
+						{
+							Debug.WriteLine($"UpdateClass: No rows affected for Id={classObj.Id}");
+							throw new Exception("Failed to update class. No matching record found.");
+						}
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"UpdateClass: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error updating class.", ex);
+			}
+		}
+
+		public void DeleteClass(string id)
+		{
+			if (string.IsNullOrWhiteSpace(id))
+			{
+				Debug.WriteLine("DeleteClass: Invalid Id.");
+				throw new ArgumentException("Class ID is invalid.");
+			}
+
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = "DELETE FROM [Class] WHERE Id = @Id";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						cmd.Parameters.AddWithValue("@Id", id);
+						Debug.WriteLine($"DeleteClass: Deleting Id={id}");
+						cmd.ExecuteNonQuery();
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"DeleteClass: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error deleting class.", ex);
+			}
+		}
+
+		// Teacher Management
+		public List<Teacher> GetTeachers()
+		{
+			List<Teacher> teachers = new List<Teacher>();
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = @"
+                        SELECT Id, Name, Email, Major, ProfessionalQualification, Gender, Ethnicity, 
+                               PartyMember, ForeignLanguageLevel, ITLevel 
+                        FROM [Teacher]";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						using (SqlDataReader reader = cmd.ExecuteReader())
+						{
+							while (reader.Read())
+							{
+								teachers.Add(new Teacher
+								{
+									Id = reader.GetString(reader.GetOrdinal("Id")),
+									Name = reader.GetString(reader.GetOrdinal("Name")),
+									Email = reader.GetString(reader.GetOrdinal("Email")),
+									Major = reader.IsDBNull(reader.GetOrdinal("Major")) ? null : reader.GetString(reader.GetOrdinal("Major")),
+									ProfessionalQualification = reader.IsDBNull(reader.GetOrdinal("ProfessionalQualification")) ? null : reader.GetString(reader.GetOrdinal("ProfessionalQualification")),
+									Gender = reader.IsDBNull(reader.GetOrdinal("Gender")) ? null : reader.GetBoolean(reader.GetOrdinal("Gender")),
+									Ethnicity = reader.IsDBNull(reader.GetOrdinal("Ethnicity")) ? null : reader.GetString(reader.GetOrdinal("Ethnicity")),
+									PartyMember = reader.IsDBNull(reader.GetOrdinal("PartyMember")) ? null : reader.GetBoolean(reader.GetOrdinal("PartyMember")),
+									ForeignLanguageLevel = reader.IsDBNull(reader.GetOrdinal("ForeignLanguageLevel")) ? null : reader.GetString(reader.GetOrdinal("ForeignLanguageLevel")),
+									ITLevel = reader.IsDBNull(reader.GetOrdinal("ITLevel")) ? null : reader.GetString(reader.GetOrdinal("ITLevel"))
+								});
+							}
+						}
+					}
+				}
+				Debug.WriteLine($"GetTeachers: Found {teachers.Count} teachers.");
+				return teachers;
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"GetTeachers: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error retrieving teachers.", ex);
+			}
+		}
+
+		public void AddTeacher(Teacher teacher)
+		{
+			if (teacher == null || string.IsNullOrWhiteSpace(teacher.Id) || string.IsNullOrWhiteSpace(teacher.Name) || string.IsNullOrWhiteSpace(teacher.Email))
+			{
+				Debug.WriteLine($"AddTeacher: Invalid teacher data (Id='{teacher?.Id}', Name='{teacher?.Name}', Email='{teacher?.Email}')");
+				throw new ArgumentException("Teacher data is invalid.");
+			}
+
+			// Check email uniqueness
+			if (!IsEmailUnique(teacher.Email))
+			{
+				Debug.WriteLine($"AddTeacher: Email '{teacher.Email}' already exists.");
+				throw new ArgumentException("Email already exists.");
+			}
+
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = @"
+                INSERT INTO [Teacher] (Id, Name, Email, Major, ProfessionalQualification, Gender, Ethnicity, 
+                                     PartyMember, ForeignLanguageLevel, ITLevel)
+                VALUES (@Id, @Name, @Email, @Major, @ProfessionalQualification, @Gender, @Ethnicity, 
+                        @PartyMember, @ForeignLanguageLevel, @ITLevel)";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						cmd.Parameters.AddWithValue("@Id", teacher.Id);
+						cmd.Parameters.AddWithValue("@Name", teacher.Name);
+						cmd.Parameters.AddWithValue("@Email", teacher.Email);
+						cmd.Parameters.AddWithValue("@Major", (object)teacher.Major ?? DBNull.Value);
+						cmd.Parameters.AddWithValue("@ProfessionalQualification", (object)teacher.ProfessionalQualification ?? DBNull.Value);
+						cmd.Parameters.AddWithValue("@Gender", (object)teacher.Gender ?? DBNull.Value);
+						cmd.Parameters.AddWithValue("@Ethnicity", (object)teacher.Ethnicity ?? DBNull.Value);
+						cmd.Parameters.AddWithValue("@PartyMember", (object)teacher.PartyMember ?? DBNull.Value);
+						cmd.Parameters.AddWithValue("@ForeignLanguageLevel", (object)teacher.ForeignLanguageLevel ?? DBNull.Value);
+						cmd.Parameters.AddWithValue("@ITLevel", (object)teacher.ITLevel ?? DBNull.Value);
+						Debug.WriteLine($"AddTeacher: Inserting Id={teacher.Id}, Name={teacher.Name}");
+						cmd.ExecuteNonQuery();
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"AddTeacher: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error adding teacher.", ex);
+			}
+		}
+
+		public string GetNextTeacherId()
+		{
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = "SELECT Id FROM [Teacher] WHERE Id LIKE 'GV%'";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						List<int> numbers = new List<int>();
+						using (SqlDataReader reader = cmd.ExecuteReader())
+						{
+							while (reader.Read())
+							{
+								string id = reader.GetString(reader.GetOrdinal("Id"));
+								if (id.StartsWith("GV") && int.TryParse(id.Substring(2), out int number))
+								{
+									numbers.Add(number);
+								}
+							}
+						}
+
+						int nextNumber = numbers.Count > 0 ? numbers.Max() + 1 : 1;
+						string nextId = $"GV{nextNumber.ToString("D4")}";
+						Debug.WriteLine($"GetNextTeacherId: Generated ID = {nextId}");
+						return nextId;
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"GetNextTeacherId: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error generating next teacher ID.", ex);
+			}
+		}
+
+		public bool IsEmailUnique(string email, string teacherId = null)
+		{
+			if (string.IsNullOrWhiteSpace(email))
+			{
+				Debug.WriteLine("IsEmailUnique: Invalid email.");
+				return false;
+			}
+
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = "SELECT COUNT(*) FROM [Teacher] WHERE Email = @Email" + (teacherId != null ? " AND Id != @Id" : "");
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						cmd.Parameters.AddWithValue("@Email", email);
+						if (teacherId != null)
+						{
+							cmd.Parameters.AddWithValue("@Id", teacherId);
+						}
+						int count = (int)cmd.ExecuteScalar();
+						Debug.WriteLine($"IsEmailUnique: Email={email}, TeacherId={teacherId ?? "null"}, Unique={count == 0}");
+						return count == 0;
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"IsEmailUnique: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error checking email uniqueness.", ex);
+			}
+		}
+
+		public void UpdateTeacher(Teacher teacher)
+		{
+			if (teacher == null || string.IsNullOrWhiteSpace(teacher.Id) || string.IsNullOrWhiteSpace(teacher.Name) || string.IsNullOrWhiteSpace(teacher.Email))
+			{
+				Debug.WriteLine($"UpdateTeacher: Invalid teacher data (Id='{teacher?.Id}', Name='{teacher?.Name}', Email='{teacher?.Email}')");
+				throw new ArgumentException("Teacher data is invalid.");
+			}
+
+			// Check email uniqueness (exclude current teacher)
+			if (!IsEmailUnique(teacher.Email, teacher.Id))
+			{
+				Debug.WriteLine($"UpdateTeacher: Email '{teacher.Email}' already exists for another teacher.");
+				throw new ArgumentException("Email already exists.");
+			}
+
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = @"
+                UPDATE [Teacher]
+                SET Name = @Name, Email = @Email, Major = @Major, ProfessionalQualification = @ProfessionalQualification,
+                    Gender = @Gender, Ethnicity = @Ethnicity, PartyMember = @PartyMember, 
+                    ForeignLanguageLevel = @ForeignLanguageLevel, ITLevel = @ITLevel
+                WHERE Id = @Id";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						cmd.Parameters.AddWithValue("@Id", teacher.Id);
+						cmd.Parameters.AddWithValue("@Name", teacher.Name);
+						cmd.Parameters.AddWithValue("@Email", teacher.Email);
+						cmd.Parameters.AddWithValue("@Major", (object)teacher.Major ?? DBNull.Value);
+						cmd.Parameters.AddWithValue("@ProfessionalQualification", (object)teacher.ProfessionalQualification ?? DBNull.Value);
+						cmd.Parameters.AddWithValue("@Gender", (object)teacher.Gender ?? DBNull.Value);
+						cmd.Parameters.AddWithValue("@Ethnicity", (object)teacher.Ethnicity ?? DBNull.Value);
+						cmd.Parameters.AddWithValue("@PartyMember", (object)teacher.PartyMember ?? DBNull.Value);
+						cmd.Parameters.AddWithValue("@ForeignLanguageLevel", (object)teacher.ForeignLanguageLevel ?? DBNull.Value);
+						cmd.Parameters.AddWithValue("@ITLevel", (object)teacher.ITLevel ?? DBNull.Value);
+						Debug.WriteLine($"UpdateTeacher: Updating Id={teacher.Id}, Name={teacher.Name}");
+						int rowsAffected = cmd.ExecuteNonQuery();
+						if (rowsAffected == 0)
+						{
+							Debug.WriteLine($"UpdateTeacher: No rows affected for Id={teacher.Id}");
+							throw new Exception("Failed to update teacher. No matching record found.");
+						}
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"UpdateTeacher: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error updating teacher.", ex);
+			}
+		}
+
+		public void DeleteTeacher(string id)
+		{
+			if (string.IsNullOrWhiteSpace(id))
+			{
+				Debug.WriteLine("DeleteTeacher: Invalid Id.");
+				throw new ArgumentException("Teacher ID is invalid.");
+			}
+
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					// Check for dependencies in TeacherClass
+					string checkQuery = "SELECT COUNT(*) FROM [TeacherClass] WHERE TeacherId = @Id";
+					using (SqlCommand checkCmd = new SqlCommand(checkQuery, conn))
+					{
+						checkCmd.Parameters.AddWithValue("@Id", id);
+						int count = (int)checkCmd.ExecuteScalar();
+						if (count > 0)
+						{
+							// Optionally: Remove assignments
+							string removeAssignmentsQuery = "DELETE FROM [TeacherClass] WHERE TeacherId = @Id";
+							using (SqlCommand removeCmd = new SqlCommand(removeAssignmentsQuery, conn))
+							{
+								removeCmd.Parameters.AddWithValue("@Id", id);
+								Debug.WriteLine($"DeleteTeacher: Removing {count} class assignments for TeacherId={id}");
+								removeCmd.ExecuteNonQuery();
+							}
+							// Alternatively, you could throw an exception to prevent deletion:
+							// throw new Exception("Cannot delete teacher because they are assigned to one or more classes.");
+						}
+					}
+
+					// Delete the teacher
+					string query = "DELETE FROM [Teacher] WHERE Id = @Id";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						cmd.Parameters.AddWithValue("@Id", id);
+						Debug.WriteLine($"DeleteTeacher: Deleting Id={id}");
+						int rowsAffected = cmd.ExecuteNonQuery();
+						if (rowsAffected == 0)
+						{
+							Debug.WriteLine($"DeleteTeacher: No rows affected for Id={id}");
+							throw new Exception("Failed to delete teacher. No matching record found.");
+						}
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"DeleteTeacher: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error deleting teacher.", ex);
+			}
+		}
+
+		// Teacher-Class Assignment
+		public void AssignTeacherToClass(string teacherId, string classId)
+		{
+			if (string.IsNullOrWhiteSpace(teacherId) || string.IsNullOrWhiteSpace(classId))
+			{
+				Debug.WriteLine($"AssignTeacherToClass: Invalid input (TeacherId='{teacherId}', ClassId='{classId}')");
+				throw new ArgumentException("Teacher ID or Class ID is invalid.");
+			}
+
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = "INSERT INTO [TeacherClass] (TeacherId, ClassId) VALUES (@TeacherId, @ClassId)";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						cmd.Parameters.AddWithValue("@TeacherId", teacherId);
+						cmd.Parameters.AddWithValue("@ClassId", classId);
+						Debug.WriteLine($"AssignTeacherToClass: Assigning TeacherId={teacherId} to ClassId={classId}");
+						cmd.ExecuteNonQuery();
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"AssignTeacherToClass: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error assigning teacher to class.", ex);
+			}
+		}
+
+		public void RemoveTeacherFromClass(string teacherId, string classId)
+		{
+			if (string.IsNullOrWhiteSpace(teacherId) || string.IsNullOrWhiteSpace(classId))
+			{
+				Debug.WriteLine($"RemoveTeacherFromClass: Invalid input (TeacherId='{teacherId}', ClassId='{classId}')");
+				throw new ArgumentException("Teacher ID or Class ID is invalid.");
+			}
+
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = "DELETE FROM [TeacherClass] WHERE TeacherId = @TeacherId AND ClassId = @ClassId";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						cmd.Parameters.AddWithValue("@TeacherId", teacherId);
+						cmd.Parameters.AddWithValue("@ClassId", classId);
+						Debug.WriteLine($"RemoveTeacherFromClass: Removing TeacherId={teacherId} from ClassId={classId}");
+						cmd.ExecuteNonQuery();
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"RemoveTeacherFromClass: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error removing teacher from class.", ex);
+			}
+		}
+
+		public List<Class> GetClassesByTeacher(string teacherId)
+		{
+			if (string.IsNullOrWhiteSpace(teacherId))
+			{
+				Debug.WriteLine("GetClassesByTeacher: Invalid TeacherId.");
+				return new List<Class>();
+			}
+
+			List<Class> classes = new List<Class>();
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = @"
+                        SELECT c.Id, c.Name, c.SubjectId, c.StartDate, c.EndDate
+                        FROM [Class] c
+                        JOIN [TeacherClass] tc ON c.Id = tc.ClassId
+                        WHERE tc.TeacherId = @TeacherId";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						cmd.Parameters.AddWithValue("@TeacherId", teacherId);
+						using (SqlDataReader reader = cmd.ExecuteReader())
+						{
+							while (reader.Read())
+							{
+								classes.Add(new Class
+								{
+									Id = reader.GetString(reader.GetOrdinal("Id")),
+									Name = reader.GetString(reader.GetOrdinal("Name")),
+									SubjectId = reader.GetString(reader.GetOrdinal("SubjectId")),
+									StartDate = reader.GetDateTime(reader.GetOrdinal("StartDate")),
+									EndDate = reader.GetDateTime(reader.GetOrdinal("EndDate"))
+								});
+							}
+						}
+					}
+				}
+				Debug.WriteLine($"GetClassesByTeacher: Found {classes.Count} classes for TeacherId={teacherId}");
+				return classes;
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"GetClassesByTeacher: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error retrieving classes for teacher.", ex);
+			}
+		}
+
+		// Student-Class Enrollment
+		public void EnrollStudentInClass(string username, string classId)
+		{
+			if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(classId))
+			{
+				Debug.WriteLine($"EnrollStudentInClass: Invalid input (Username='{username}', ClassId='{classId}')");
+				throw new ArgumentException("Username or Class ID is invalid.");
+			}
+
+			string studentId = GetStudentIdByUsername(username);
+			if (string.IsNullOrWhiteSpace(studentId))
+			{
+				Debug.WriteLine($"EnrollStudentInClass: No IdStudent found for Username={username}");
+				throw new Exception("Student ID not found for the given username.");
+			}
+
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					// Get the SubjectId for the class
+					string subjectQuery = "SELECT SubjectId FROM [Class] WHERE Id = @ClassId";
+					string subjectId;
+					using (SqlCommand cmd = new SqlCommand(subjectQuery, conn))
+					{
+						cmd.Parameters.AddWithValue("@ClassId", classId);
+						subjectId = cmd.ExecuteScalar()?.ToString();
+						if (string.IsNullOrWhiteSpace(subjectId))
+						{
+							Debug.WriteLine($"EnrollStudentInClass: No SubjectId found for ClassId={classId}");
+							throw new Exception("Class not found.");
+						}
+					}
+
+					// Check if student is already enrolled in the subject
+					string checkEnrolQuery = "SELECT COUNT(*) FROM [Enrol] WHERE IdStudent = @IdStudent AND IdSubject = @IdSubject";
+					using (SqlCommand cmd = new SqlCommand(checkEnrolQuery, conn))
+					{
+						cmd.Parameters.AddWithValue("@IdStudent", studentId);
+						cmd.Parameters.AddWithValue("@IdSubject", subjectId);
+						int count = (int)cmd.ExecuteScalar();
+						if (count == 0)
+						{
+							// Enroll in subject if not already enrolled
+							string enrolQuery = "INSERT INTO [Enrol] (IdStudent, IdSubject) VALUES (@IdStudent, @IdSubject)";
+							using (SqlCommand enrolCmd = new SqlCommand(enrolQuery, conn))
+							{
+								enrolCmd.Parameters.AddWithValue("@IdStudent", studentId);
+								enrolCmd.Parameters.AddWithValue("@IdSubject", subjectId);
+								Debug.WriteLine($"EnrollStudentInClass: Enrolling IdStudent={studentId} in IdSubject={subjectId}");
+								enrolCmd.ExecuteNonQuery();
+							}
+						}
+					}
+
+					// Enroll in class
+					string query = "INSERT INTO [ClassEnrollment] (IdStudent, ClassId) VALUES (@IdStudent, @ClassId)";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						cmd.Parameters.AddWithValue("@IdStudent", studentId);
+						cmd.Parameters.AddWithValue("@ClassId", classId);
+						Debug.WriteLine($"EnrollStudentInClass: Enrolling IdStudent={studentId} in ClassId={classId}");
+						cmd.ExecuteNonQuery();
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"EnrollStudentInClass: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error enrolling student in class.", ex);
+			}
+		}
+
+		public void RemoveStudentFromClass(string username, string classId)
+		{
+			if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(classId))
+			{
+				Debug.WriteLine($"RemoveStudentFromClass: Invalid input (Username='{username}', ClassId='{classId}')");
+				throw new ArgumentException("Username or Class ID is invalid.");
+			}
+
+			string studentId = GetStudentIdByUsername(username);
+			if (string.IsNullOrWhiteSpace(studentId))
+			{
+				Debug.WriteLine($"RemoveStudentFromClass: No IdStudent found for Username={username}");
+				throw new Exception("Student ID not found for the given username.");
+			}
+
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = "DELETE FROM [ClassEnrollment] WHERE IdStudent = @IdStudent AND ClassId = @ClassId";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						cmd.Parameters.AddWithValue("@IdStudent", studentId);
+						cmd.Parameters.AddWithValue("@ClassId", classId);
+						Debug.WriteLine($"RemoveStudentFromClass: Removing IdStudent={studentId} from ClassId={classId}");
+						cmd.ExecuteNonQuery();
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"RemoveStudentFromClass: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error removing student from class.", ex);
+			}
+		}
+
+		public List<Class> GetClassesByStudent(string username)
+		{
+			if (string.IsNullOrWhiteSpace(username))
+			{
+				Debug.WriteLine("GetClassesByStudent: Invalid username.");
+				return new List<Class>();
+			}
+
+			string studentId = GetStudentIdByUsername(username);
+			if (string.IsNullOrWhiteSpace(studentId))
+			{
+				Debug.WriteLine($"GetClassesByStudent: No IdStudent found for Username={username}");
+				return new List<Class>();
+			}
+
+			List<Class> classes = new List<Class>();
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = @"
+                        SELECT c.Id, c.Name, c.SubjectId, c.StartDate, c.EndDate
+                        FROM [Class] c
+                        JOIN [ClassEnrollment] ce ON c.Id = ce.ClassId
+                        WHERE ce.IdStudent = @IdStudent";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						cmd.Parameters.AddWithValue("@IdStudent", studentId);
+						using (SqlDataReader reader = cmd.ExecuteReader())
+						{
+							while (reader.Read())
+							{
+								classes.Add(new Class
+								{
+									Id = reader.GetString(reader.GetOrdinal("Id")),
+									Name = reader.GetString(reader.GetOrdinal("Name")),
+									SubjectId = reader.GetString(reader.GetOrdinal("SubjectId")),
+									StartDate = reader.GetDateTime(reader.GetOrdinal("StartDate")),
+									EndDate = reader.GetDateTime(reader.GetOrdinal("EndDate"))
+								});
+							}
+						}
+					}
+				}
+				Debug.WriteLine($"GetClassesByStudent: Found {classes.Count} classes for IdStudent={studentId}");
+				return classes;
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"GetClassesByStudent: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error retrieving classes for student.", ex);
+			}
+		}
+
+		// Teacher Viewing Student Count
+		public int GetStudentCountInClass(string teacherId, string classId)
+		{
+			if (string.IsNullOrWhiteSpace(teacherId) || string.IsNullOrWhiteSpace(classId))
+			{
+				Debug.WriteLine($"GetStudentCountInClass: Invalid input (TeacherId='{teacherId}', ClassId='{classId}')");
+				throw new ArgumentException("Teacher ID or Class ID is invalid.");
+			}
+
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = @"
+                        SELECT COUNT(*) 
+                        FROM [ClassEnrollment] ce
+                        JOIN [TeacherClass] tc ON ce.ClassId = tc.ClassId
+                        WHERE tc.TeacherId = @TeacherId AND ce.ClassId = @ClassId";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						cmd.Parameters.AddWithValue("@TeacherId", teacherId);
+						cmd.Parameters.AddWithValue("@ClassId", classId);
+						int count = (int)cmd.ExecuteScalar();
+						Debug.WriteLine($"GetStudentCountInClass: TeacherId={teacherId}, ClassId={classId}, Count={count}");
+						return count;
+					}
+				}
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"GetStudentCountInClass: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error retrieving student count in class.", ex);
+			}
+		}
+
+		public List<Student> GetStudentsInClass(string teacherId, string classId)
+		{
+			if (string.IsNullOrWhiteSpace(teacherId) || string.IsNullOrWhiteSpace(classId))
+			{
+				Debug.WriteLine($"GetStudentsInClass: Invalid input (TeacherId='{teacherId}', ClassId='{classId}')");
+				throw new ArgumentException("Teacher ID or Class ID is invalid.");
+			}
+
+			List<Student> students = new List<Student>();
+			try
+			{
+				using (SqlConnection conn = GetConnection())
+				{
+					string query = @"
+                        SELECT s.Id, s.Name, s.BOF, s.IdProvince, s.Gender, s.CreatedAt
+                        FROM [Student] s
+                        JOIN [ClassEnrollment] ce ON s.Id = ce.IdStudent
+                        JOIN [TeacherClass] tc ON ce.ClassId = tc.ClassId
+                        WHERE tc.TeacherId = @TeacherId AND ce.ClassId = @ClassId";
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						cmd.Parameters.AddWithValue("@TeacherId", teacherId);
+						cmd.Parameters.AddWithValue("@ClassId", classId);
+						using (SqlDataReader reader = cmd.ExecuteReader())
+						{
+							while (reader.Read())
+							{
+								students.Add(new Student
+								{
+									Id = reader.GetString(reader.GetOrdinal("Id")),
+									Name = reader.GetString(reader.GetOrdinal("Name")),
+									BOF = reader.GetDateTime(reader.GetOrdinal("BOF")),
+									IdProvince = reader.GetInt32(reader.GetOrdinal("IdProvince")),
+									Gender = reader.GetBoolean(reader.GetOrdinal("Gender")),
+									CreatedAt = reader.GetDateTime(reader.GetOrdinal("CreatedAt"))
+								});
+							}
+						}
+					}
+				}
+				Debug.WriteLine($"GetStudentsInClass: Found {students.Count} students for TeacherId={teacherId}, ClassId={classId}");
+				return students;
+			}
+			catch (SqlException ex)
+			{
+				Debug.WriteLine($"GetStudentsInClass: Error - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				throw new Exception("Error retrieving students in class.", ex);
+			}
+		}
+
+		
 	}
 }

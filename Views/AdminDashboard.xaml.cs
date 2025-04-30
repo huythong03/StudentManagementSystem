@@ -113,6 +113,11 @@ namespace StudentManagementSystem.Views
 			MainContent.Content = new AdminEnrollRequestsView();
 		}
 
+		private void ManageClasses_Click(object sender, RoutedEventArgs e)
+		{
+			MainContent.Content = new ClassManagementView();
+		}
+
 		private void Logout_Click(object sender, RoutedEventArgs e)
 		{
 			timer?.Stop();
