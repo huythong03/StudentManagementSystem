@@ -2116,7 +2116,7 @@ namespace StudentManagementSystem
 			}
 		}
 
-		public List<TeacherClassAssignment> GetTeacherClassAssignments()
+		public List<TeacherClassAssignment> GetTeacherClassAssignments() // gán giáo viên vào lớp học
 		{
 			var assignments = new List<TeacherClassAssignment>();
 			try
